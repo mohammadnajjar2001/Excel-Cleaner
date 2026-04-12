@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Excel Cleaner</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Excel Cleaner</h1>
+      <p>ارفع ملف Excel، اختر تاريخًا، ثم قم بتنظيف البيانات وعرض النتائج.</p>
+    </header>
+
+    <section class="card controls">
+      <label class="field">
+        <span>اختر ملفات Excel متعددة (.xlsx)</span>
+        <input id="fileInput" type="file" accept=".xlsx" multiple />
+      </label>
+
+      <label class="field">
+        <span>اختر تاريخًا</span>
+        <input id="dateInput" type="date" />
+      </label>
+
+      <div class="actions">
+        <button id="cleanButton" class="primary">تنظيف البيانات</button>
+        <button id="downloadButton" class="secondary" disabled>تحميل الملف</button>
+      </div>
+
+      <p id="status" class="status">قم بتحميل ملف Excel ثم اختر التاريخ.</p>
+    </section>
+
+    <section class="card results">
+      <h2>النتائج</h2>
+      <div class="table-wrapper">
+        <table id="resultTable">
+          <thead>
+            <tr>
+              <th>المهمة</th>
+              <th>التاريخ</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
