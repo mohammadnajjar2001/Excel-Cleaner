@@ -352,8 +352,12 @@ function buildWorkbookFromSheets(sheets) {
       suffix += 1;
     }
 
-    const sheetData = [sheet.headers, ...sheet.rows.map((row) => [row.task || '', String(row.date || '')])];
-    const worksheet = XLSX.utils.aoa_to_sheet(sheetData);
+    const sortedRows = sortRowsDescending([...sheet.rows]);
+
+    const sheetData = [
+      sheet.headers,
+      ...sortedRows.map((row) => [row.task || '', String(row.date || '')])
+    ]; const worksheet = XLSX.utils.aoa_to_sheet(sheetData);
     worksheet['!sheetViews'] = [{ RTL: true }];
     worksheet['!cols'] = [{ wch: 60 }, { wch: 20 }];
     XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
@@ -412,7 +416,48 @@ function buildWorkbook(rows, sheetName) {
 
   return workbook;
 }
+function sortRowsDescending(rows) {
+  return rows.sort((a, b) => {
+    const parseValue = (val) => {
+      if (val === null || val === undefined) return { type: 3, value: 0 };
 
+      const str = String(val).trim();
+
+      // نسبة مئوية
+      if (str.endsWith('%')) {
+        return {
+          type: 2,
+          value: parseFloat(str.replace('%', '')) || 0,
+        };
+      }
+
+      // رقم
+      if (!isNaN(str)) {
+        return {
+          type: 1,
+          value: parseFloat(str),
+        };
+      }
+
+      // نص أو شيء آخر
+      return {
+        type: 3,
+        value: 0,
+      };
+    };
+
+    const aVal = parseValue(a.date);
+    const bVal = parseValue(b.date);
+
+    // أولاً حسب النوع
+    if (aVal.type !== bVal.type) {
+      return aVal.type - bVal.type; // 1 (أرقام) ثم 2 (%) ثم 3 (نص)
+    }
+
+    // ثم حسب القيمة داخل نفس النوع
+    return bVal.value - aVal.value;
+  });
+}
 function downloadWorkbook(workbook, fileName) {
   XLSX.writeFile(workbook, fileName);
 }
@@ -442,6 +487,7 @@ cleanButton.addEventListener('click', async () => {
   try {
     workbookSheets = await processFiles(files, lastSelectedDate);
     filteredRows = workbookSheets.flatMap((sheet) => sheet.rows);
+    filteredRows = sortRowsDescending(filteredRows);
     previewRows = [...filteredRows];
 
     if (!filteredRows.length) {
