@@ -212,3 +212,53 @@ tbody tr:first-child td {
     width: 100%;
   }
 }
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 15px;
+  font-family: 'Cairo', sans-serif;
+}
+
+.field span {
+  font-size: 14px;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+/* شكل الـ select */
+#filterType {
+  padding: 12px 14px;
+  border: 1px solid #d0d7de;
+  border-radius: 10px;
+  background-color: #ffffff;
+  font-size: 14px;
+  color: #333;
+  cursor: pointer;
+
+  /* إزالة الشكل الافتراضي */
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+
+  /* أيقونة سهم */
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg fill='%23666' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M5.5 7l4.5 4.5L14.5 7'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: left 12px center;
+  background-size: 14px;
+  padding-left: 35px;
+
+  transition: all 0.2s ease;
+}
+
+/* عند التركيز */
+#filterType:focus {
+  outline: none;
+  border-color: #4a90e2;
+  box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.15);
+}
+
+/* عند hover */
+#filterType:hover {
+  border-color: #4a90e2;
+}

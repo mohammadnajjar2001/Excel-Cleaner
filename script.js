@@ -464,7 +464,16 @@ function downloadWorkbook(workbook, fileName) {
 
 cleanButton.addEventListener('click', async () => {
   const files = Array.from(fileInput.files);
-  const selectedDate = dateInput.value;
+  // const selectedDate = dateInput.value;
+  const filterType = document.getElementById('filterType').value;
+
+  let selectedDate = dateInput.value;
+
+  // إذا اختار أسبوع
+  if (filterType === 'week1') selectedDate = "1";
+  if (filterType === 'week2') selectedDate = "2";
+  if (filterType === 'week3') selectedDate = "3";
+  if (filterType === 'week4') selectedDate = "4";
 
   if (!files.length) {
     showStatus('الرجاء اختيار ملف Excel على الأقل.', true);
@@ -519,3 +528,20 @@ downloadButton.addEventListener('click', () => {
   const fileName = `Excel-Cleaner-${normalizedDate}.xlsx`;
   downloadWorkbook(workbook, fileName);
 });
+
+const filterType = document.getElementById('filterType');
+const dateField = document.getElementById('dateField');
+
+function toggleDateInput() {
+  if (filterType.value === 'date') {
+    dateField.style.display = 'block';
+  } else {
+    dateField.style.display = 'none';
+  }
+}
+
+// تشغيل أول مرة عند تحميل الصفحة
+toggleDateInput();
+
+// عند تغيير الاختيار
+filterType.addEventListener('change', toggleDateInput);

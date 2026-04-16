@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -7,6 +8,7 @@
   <link rel="stylesheet" href="styles.css" />
   <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 </head>
+
 <body>
   <div class="container">
     <header>
@@ -21,10 +23,21 @@
       </label>
 
       <label class="field">
+        <span>اختر نوع الفلترة</span>
+        <select id="filterType">
+          <!-- <option>اختر نوع الفلترة</option> -->
+          <option value="date">تاريخ محدد</option>
+          <option value="week1">الأسبوع الأول</option>
+          <option value="week2">الأسبوع الثاني</option>
+          <option value="week3">الأسبوع الثالث</option>
+          <option value="week4">الأسبوع الرابع</option>
+          <!-- <option value="month">الشهر كامل</option> -->
+        </select>
+      </label>
+      <label class="field" id="dateField">
         <span>اختر تاريخًا</span>
         <input id="dateInput" type="date" />
       </label>
-
       <div class="actions">
         <button id="cleanButton" class="primary">تنظيف البيانات</button>
         <button id="downloadButton" class="secondary" disabled>تحميل الملف</button>
@@ -51,4 +64,5 @@
 
   <script src="script.js"></script>
 </body>
+
 </html>
