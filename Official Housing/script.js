@@ -154,7 +154,7 @@ processBtn.addEventListener('click', async () => {
 
     const workbook = buildWorkbook(governorates);
 
-    XLSX.writeFile(workbook, 'Governorates.xlsx');
+    XLSX.writeFile(workbook, 'السكن-الوظيفي-كامل.xlsx');
 
     showStatus('✅ تم تقسيم المحافظات بنجاح');
 
