@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>نظام إدارة الفروع</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+
+  <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+</head>
+
+<body>
+
+<div class="container">
+
+  <!-- الهيدر -->
+  <header class="header">
+    <h1>🏢 نظام إدارة الفروع</h1>
+    <p>رفع ملفات Excel الخاصة بجميع الفروع ومعالجتها وتنظيفها تلقائياً</p>
+  </header>
+
+  <!-- التحكم -->
+  <section class="card controls">
+
+    <!-- رفع الملفات -->
+    <label class="field">
+      <span>📁 اختر ملفات الفروع (Excel)</span>
+      <input id="fileInput" type="file" accept=".xlsx" multiple />
+    </label>
+
+    <!-- الفلترة -->
+    <label class="field">
+      <span>⚙️ نوع المعالجة</span>
+      <select id="filterType">
+        <option value="date">حسب تاريخ محدد</option>
+        <option value="week1">الأسبوع الأول</option>
+        <option value="week2">الأسبوع الثاني</option>
+        <option value="week3">الأسبوع الثالث</option>
+        <option value="week4">الأسبوع الرابع</option>
+        <option value="all">جميع البيانات</option>
+      </select>
+    </label>
+
+    <!-- التاريخ -->
+    <label class="field" id="dateField">
+      <span>📅 اختر التاريخ</span>
+      <input id="dateInput" type="date" />
+    </label>
+
+    <!-- الأزرار -->
+    <div class="actions">
+      <button id="cleanButton" class="primary">🧹 معالجة الفروع</button>
+      <button id="downloadButton" class="secondary" disabled>⬇️ تحميل النتائج</button>
+    </div>
+
+    <!-- الحالة -->
+    <p id="status" class="status">جاهز لمعالجة بيانات الفروع</p>
+
+  </section>
+
+  <!-- النتائج -->
+  <section class="card results">
+
+    <h2>📊 بيانات الفروع</h2>
+
+    <div class="table-wrapper">
+      <table id="resultTable">
+        <thead>
+          <tr>
+            <th>الفرع</th>
+            <th>التاريخ</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+  </section>
+
+</div>
+
+<script src="script.js"></script>
+</body>
+
+</html>

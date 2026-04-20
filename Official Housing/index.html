@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>Excel Processor</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+
+  <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+</head>
+
+<body>
+
+<header class="topbar">
+  <h1>📊 نظام معالجة Excel</h1>
+</header>
+
+<main class="wrapper">
+
+  <section class="panel">
+
+    <h2>رفع الملف</h2>
+    <p>اختر ملف Excel ليتم تقسيم المحافظات تلقائياً</p>
+
+    <input type="file" id="fileInput" accept=".xlsx">
+
+    <button id="processBtn">معالجة الملف</button>
+
+    <div id="status">بانتظار رفع الملف...</div>
+
+  </section>
+
+</main>
+
+<script src="script.js"></script>
+</body>
+</html>

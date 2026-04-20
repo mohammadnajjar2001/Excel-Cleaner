@@ -11,7 +11,7 @@ let filteredRows = [];
 let previewRows = [];
 let workbookSheets = [];
 let exportHeaders = ['Task', 'Date'];
-let originalFileName = 'Excel-Cleaner-Filtered.xlsx';
+let originalFileName = 'All-Branches-Filtered.xlsx';
 let lastSelectedDate = '';
 
 function showStatus(message, isError = false) {
@@ -486,7 +486,7 @@ cleanButton.addEventListener('click', async () => {
   }
 
   lastSelectedDate = normalizeDate(selectedDate) || selectedDate;
-  originalFileName = `Excel-Cleaner-${lastSelectedDate}.xlsx`;
+  originalFileName = `All-Branches-${lastSelectedDate}.xlsx`;
 
   showStatus('جارٍ معالجة الملفات...');
   downloadButton.disabled = true;
@@ -525,7 +525,7 @@ downloadButton.addEventListener('click', () => {
 
   const workbook = buildWorkbookFromSheets(workbookSheets);
   const normalizedDate = normalizeDate(lastSelectedDate) || lastSelectedDate;
-  const fileName = `Excel-Cleaner-${normalizedDate}.xlsx`;
+  const fileName = `فرع-الانتساب-${normalizedDate}.xlsx`;
   downloadWorkbook(workbook, fileName);
 });
 

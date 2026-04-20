@@ -1,0 +1,77 @@
+body {
+  font-family: 'Cairo', sans-serif;
+  margin: 0;
+  background: #f5f6fa;
+  color: #2c3e50;
+}
+
+/* شريط علوي */
+.topbar {
+  background: #1f2a37;
+  color: white;
+  padding: 15px 25px;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+/* الحاوية */
+.wrapper {
+  display: flex;
+  justify-content: center;
+  padding: 50px 20px;
+}
+
+/* اللوحة */
+.panel {
+  background: white;
+  width: 100%;
+  max-width: 500px;
+  padding: 30px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+}
+
+/* عنوان */
+.panel h2 {
+  margin-bottom: 10px;
+}
+
+/* وصف */
+.panel p {
+  color: #6b7280;
+  margin-bottom: 20px;
+}
+
+/* رفع الملف */
+input[type="file"] {
+  width: 100%;
+  padding: 10px;
+  border: 1px dashed #bbb;
+  border-radius: 6px;
+  margin-bottom: 20px;
+  background: #fafafa;
+}
+
+/* زر */
+button {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  background: #2563eb;
+  color: white;
+  font-size: 15px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+button:hover {
+  background: #1d4ed8;
+}
+
+/* الحالة */
+#status {
+  margin-top: 15px;
+  font-size: 14px;
+  color: #374151;
+}

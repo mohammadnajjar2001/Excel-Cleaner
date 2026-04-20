@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>نظام تنظيف ملفات الانتساب</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+
+  <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+</head>
+
+<body>
+
+<div class="container">
+
+  <!-- الهيدر -->
+  <header class="header">
+    <h1>📋 نظام تنظيف ملفات الانتساب</h1>
+    <p>ارفع ملفات الانتساب بصيغة Excel ليتم تنظيفها ومعالجتها تلقائياً</p>
+  </header>
+
+  <!-- رفع الملفات -->
+  <section class="card">
+
+    <div class="upload-box">
+      <span></span>
+      <p>📁اسحب ملفات الانتساب أو اخترها</p>
+
+      <input id="fileInput" type="file" accept=".xlsx" multiple />
+    </div>
+
+    <!-- خيارات المعالجة -->
+    <div class="form-group" style="margin-top: 10px;">
+      <label>نوع الفلترة</label>
+      <select id="filterType">
+        <option value="date">حسب تاريخ محدد</option>
+        <option value="week1">الأسبوع الأول</option>
+        <option value="week2">الأسبوع الثاني</option>
+        <option value="week3">الأسبوع الثالث</option>
+        <option value="week4">الأسبوع الرابع</option>
+      </select>
+    </div>
+
+    <!-- التاريخ -->
+    <div class="form-group" id="dateField">
+      <label>تاريخ الانتساب</label>
+      <input id="dateInput" type="date" />
+    </div>
+
+    <!-- أزرار -->
+    <div class="actions">
+      <button id="cleanButton" class="primary">🧹 تنظيف ملفات الانتساب</button>
+      <button id="downloadButton" class="secondary" disabled>⬇️ تحميل الملف النهائي</button>
+    </div>
+
+    <!-- الحالة -->
+    <p id="status" class="status">جاهز لاستقبال ملفات الانتساب</p>
+
+  </section>
+
+  <!-- النتائج -->
+  <section class="card results">
+
+    <h2>📊 نتائج المعالجة</h2>
+
+    <div class="table-wrapper">
+      <table id="resultTable">
+        <thead>
+          <tr>
+            <th>الاسم / المهمة</th>
+            <th>تاريخ الانتساب</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+  </section>
+
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
