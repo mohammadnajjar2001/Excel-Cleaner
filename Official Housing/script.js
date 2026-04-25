@@ -1,22 +1,24 @@
+// عناصر الواجهة
 const fileInput = document.getElementById('fileInput');
 const processBtn = document.getElementById('processBtn');
 const statusText = document.getElementById('status');
 
-function showStatus(msg, error = false) {
-  statusText.textContent = msg;
-  statusText.style.color = error ? 'red' : '#2c3e50';
+// تحديث حالة الواجهة
+function showStatus(message, isError = false) {
+  statusText.textContent = message;
+  statusText.style.color = isError ? 'red' : '#2c3e50';
 }
 
+// قراءة ملف Excel وتحويله إلى صفوف
 function parseWorkbook(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
 
     reader.onload = (e) => {
       try {
-        const data = e.target.result;
-        const workbook = XLSX.read(data, { type: 'array' });
-
+        const workbook = XLSX.read(e.target.result, { type: 'array' });
         const sheet = workbook.Sheets[workbook.SheetNames[0]];
+
         const rows = XLSX.utils.sheet_to_json(sheet, {
           header: 1,
           defval: '',
@@ -24,8 +26,8 @@ function parseWorkbook(file) {
         });
 
         resolve(rows);
-      } catch (err) {
-        reject(err);
+      } catch (error) {
+        reject(error);
       }
     };
 
@@ -33,6 +35,7 @@ function parseWorkbook(file) {
   });
 }
 
+// استخراج المحافظات من الجدول
 // استخراج المحافظات
 function extractGovernorates(rows) {
   const result = [];
@@ -43,7 +46,6 @@ function extractGovernorates(rows) {
 
   for (let col = 0; col < headerRow.length; col += 3) {
     const govName = headerRow[col];
-
     if (!govName) continue;
 
     const taskCol = col;
@@ -57,11 +59,15 @@ function extractGovernorates(rows) {
       const task = row[taskCol];
       const value = row[valueCol];
 
-      if (!task && !value) continue;
+      // 🔥 التصفية الجديدة:
+      // تجاهل المهمة إذا كانت القيمة فارغة أو صفر
+      if (!task) continue;
+      if (value === "" || value === null) continue;
+      if (parseFloat(value) === 0) continue;
 
       govRows.push({
-        task: task || '',
-        value: value || ''
+        task: task,
+        value: value
       });
     }
 
@@ -74,6 +80,7 @@ function extractGovernorates(rows) {
   return result;
 }
 
+// ترتيب القيم تنازليًا
 function sortByValueDesc(rows) {
   return [...rows].sort((a, b) => {
     const valA = parseFloat(a.value) || 0;
@@ -82,12 +89,11 @@ function sortByValueDesc(rows) {
   });
 }
 
+// بناء ملف Excel جديد
 function buildWorkbook(governorates) {
   const workbook = XLSX.utils.book_new();
 
   governorates.forEach((gov) => {
-
-    // نفترض أن القيمة النسبية تحتوي %
     const numericTasks = gov.rows.filter(r => !String(r.value).includes('%'));
     const percentageTasks = gov.rows.filter(r => String(r.value).includes('%'));
 
@@ -100,23 +106,18 @@ function buildWorkbook(governorates) {
     );
 
     const sheetData = [
-      // ['📊 المهام العددية (من الأكبر للأصغر)'],
       ['المهمة', 'العدد'],
       ...sortedNumeric.map(r => [r.task, r.value]),
-
-      // [],
-      // ['📈 المهام النسبية (من الأكبر للأصغر)'],
-      // ['المهمة', 'النسبة'],
+      [],
+      [],
+      [],
       ...sortedPercentage.map(r => [r.task, r.value + '%'])
     ];
 
     const worksheet = XLSX.utils.aoa_to_sheet(sheetData);
 
     worksheet['!sheetViews'] = [{ RTL: true }];
-    worksheet['!cols'] = [
-      { wch: 50 },
-      { wch: 20 }
-    ];
+    worksheet['!cols'] = [{ wch: 50 }, { wch: 20 }];
 
     XLSX.utils.book_append_sheet(
       workbook,
@@ -144,7 +145,6 @@ processBtn.addEventListener('click', async () => {
 
   try {
     const rows = await parseWorkbook(file);
-
     const governorates = extractGovernorates(rows);
 
     if (!governorates.length) {
@@ -154,12 +154,15 @@ processBtn.addEventListener('click', async () => {
 
     const workbook = buildWorkbook(governorates);
 
-    XLSX.writeFile(workbook, 'السكن-الوظيفي-كامل.xlsx');
+    // إضافة التاريخ بصيغة YYYY-MM-DD
+    const today = new Date().toISOString().split('T')[0];
+
+    XLSX.writeFile(workbook, `السكن-الوظيفي-${today}.xlsx`);
 
     showStatus('✅ تم تقسيم المحافظات بنجاح');
 
-  } catch (err) {
-    console.error(err);
+  } catch (error) {
+    console.error(error);
     showStatus('❌ حدث خطأ أثناء المعالجة', true);
   }
 });
