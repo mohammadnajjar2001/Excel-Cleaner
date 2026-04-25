@@ -101,6 +101,7 @@
           <li class="nav-item"><a class="nav-link" href="../All Branches/index.html">كل الأفرع</a></li>
           <li class="nav-item"><a class="nav-link" href="../Affiliation Track/index.html">الانتساب</a></li>
           <li class="nav-item"><a class="nav-link active" href="../Official Housing/index.html">السكن</a></li>
+          <li class="nav-item"><a class="nav-link" href="../Data Audit/index.html">مطابقة الأفرع</a></li>
         </ul>
       </div>
     </div>
@@ -118,6 +119,11 @@
         اختر ملف Excel
       </label>
       <input type="file" id="fileInput" accept=".xlsx">
+
+      <div class="selected-file" id="selectedFile">
+        <div class="selected-file-title">الملف المختار</div>
+        <div class="empty-file">لم يتم اختيار أي ملف بعد.</div>
+      </div>
 
       <button id="processBtn" class="process-btn">معالجة الملف</button>
 

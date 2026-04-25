@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>مطابقة مهام الأفرع</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  </head>
+  <body>
+    <header class="topbar shadow-sm">
+      <h1>✅ مطابقة مهام الأفرع</h1>
+      <p>مطابقة ملف Excel قبل التصميم مع ملف PDF بعد التصميم</p>
+    </header>
+
+    <nav class="site-nav" aria-label="روابط الصفحات">
+      <a href="../index.html">الرئيسية</a>
+      <a href="../All Branches/index.html">كل الأفرع</a>
+      <a href="../Affiliation Track/index.html">الانتساب</a>
+      <a href="../Official Housing/index.html">السكن</a>
+      <a class="active" href="../Data Audit/index.html" aria-current="page">مطابقة الأفرع</a>
+    </nav>
+
+    <main class="app-shell">
+      <section class="workspace" aria-label="أداة المطابقة">
+        <aside class="panel controls-panel">
+          <div class="brand">
+            <span class="brand-mark" aria-hidden="true">✓</span>
+            <div>
+              <h1>مطابقة مهام الأفرع</h1>
+              <p>Excel قبل التصميم مقابل PDF بعد التصميم</p>
+            </div>
+          </div>
+
+          <label class="drop-zone" for="excelFile" id="excelDrop">
+            <input id="excelFile" type="file" accept=".xlsx,.xls,.csv" />
+            <span class="file-icon" aria-hidden="true">XLS</span>
+            <span class="file-title">ملف Excel</span>
+            <span class="file-name" id="excelName">لم يتم اختيار ملف</span>
+          </label>
+
+          <label class="drop-zone" for="pdfFile" id="pdfDrop">
+            <input id="pdfFile" type="file" accept=".pdf" />
+            <span class="file-icon pdf" aria-hidden="true">PDF</span>
+            <span class="file-title">ملف PDF</span>
+            <span class="file-name" id="pdfName">لم يتم اختيار ملف</span>
+          </label>
+
+          <div class="settings">
+            <label>
+              حساسية المطابقة
+              <input id="threshold" type="range" min="45" max="95" value="72" />
+              <span id="thresholdValue">72%</span>
+            </label>
+            <label class="toggle">
+              <input id="strictBranch" type="checkbox" checked />
+              <span>المطابقة داخل كل فرع فقط</span>
+            </label>
+          </div>
+
+          <div class="actions">
+            <button id="compareBtn" class="primary" type="button" disabled>تشغيل المطابقة</button>
+            <button id="clearBtn" type="button">مسح</button>
+            <button id="exportBtn" type="button" disabled>تصدير CSV</button>
+          </div>
+        </aside>
+
+        <section class="results">
+          <div class="summary-grid" aria-live="polite">
+            <article class="metric">
+              <span>الأفرع</span>
+              <strong id="branchCount">0</strong>
+            </article>
+            <article class="metric">
+              <span>المهام</span>
+              <strong id="taskCount">0</strong>
+            </article>
+            <article class="metric ok">
+              <span>مطابق</span>
+              <strong id="okCount">0</strong>
+            </article>
+            <article class="metric danger">
+              <span>أخطاء</span>
+              <strong id="errorCount">0</strong>
+            </article>
+          </div>
+
+          <div class="toolbar">
+            <div class="tabs" role="tablist" aria-label="تصفية النتائج">
+              <button class="tab active" data-filter="all" type="button">الكل</button>
+              <button class="tab" data-filter="error" type="button">الأخطاء</button>
+              <button class="tab" data-filter="ok" type="button">المطابق</button>
+            </div>
+            <input id="searchBox" type="search" placeholder="بحث" />
+          </div>
+
+          <div id="status" class="status">اختر الملفين للبدء.</div>
+          <div id="resultsList" class="results-list"></div>
+        </section>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>

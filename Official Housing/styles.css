@@ -66,6 +66,62 @@ input[type="file"] {
   display: none;
 }
 
+.selected-file {
+  margin: 0 0 15px;
+  padding: 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #f8fafc;
+}
+
+.selected-file-title {
+  margin-bottom: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #2c3e50;
+}
+
+.empty-file {
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.file-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: white;
+}
+
+.file-info {
+  min-width: 0;
+  overflow: hidden;
+  color: #334155;
+  font-size: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.remove-file-btn {
+  flex: 0 0 auto;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 12px;
+  background: #fee2e2;
+  color: #991b1b;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.remove-file-btn:hover {
+  background: #fecaca;
+}
+
 /* زر المعالجة */
 .process-btn {
   width: 100%;
@@ -102,5 +158,14 @@ input[type="file"] {
 
   .topbar {
     font-size: 18px;
+  }
+
+  .file-item {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .remove-file-btn {
+    width: 100%;
   }
 }

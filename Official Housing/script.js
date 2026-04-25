@@ -2,12 +2,59 @@
 const fileInput = document.getElementById('fileInput');
 const processBtn = document.getElementById('processBtn');
 const statusText = document.getElementById('status');
+const selectedFileContainer = document.getElementById('selectedFile');
+
+let selectedFile = null;
 
 // تحديث حالة الواجهة
 function showStatus(message, isError = false) {
   statusText.textContent = message;
   statusText.style.color = isError ? 'red' : '#2c3e50';
 }
+
+function renderSelectedFile() {
+  selectedFileContainer.innerHTML = '<div class="selected-file-title">الملف المختار</div>';
+
+  if (!selectedFile) {
+    const empty = document.createElement('div');
+    empty.className = 'empty-file';
+    empty.textContent = 'لم يتم اختيار أي ملف بعد.';
+    selectedFileContainer.appendChild(empty);
+    return;
+  }
+
+  const item = document.createElement('div');
+  item.className = 'file-item';
+
+  const info = document.createElement('span');
+  info.className = 'file-info';
+  info.textContent = `${selectedFile.name} (${(selectedFile.size / 1024).toFixed(1)} KB)`;
+
+  const removeButton = document.createElement('button');
+  removeButton.className = 'remove-file-btn';
+  removeButton.type = 'button';
+  removeButton.textContent = 'حذف';
+  removeButton.setAttribute('aria-label', `حذف ${selectedFile.name}`);
+  removeButton.addEventListener('click', () => {
+    selectedFile = null;
+    fileInput.value = '';
+    renderSelectedFile();
+    showStatus('تم حذف الملف المختار. بانتظار رفع ملف جديد.');
+  });
+
+  item.appendChild(info);
+  item.appendChild(removeButton);
+  selectedFileContainer.appendChild(item);
+}
+
+fileInput.addEventListener('change', () => {
+  const file = fileInput.files[0];
+  if (!file) return;
+
+  selectedFile = file;
+  renderSelectedFile();
+  showStatus('تم اختيار الملف. يمكنك استبداله باختيار ملف آخر أو حذفه.');
+});
 
 // قراءة ملف Excel وتحويله إلى صفوف
 function parseWorkbook(file) {
@@ -134,7 +181,7 @@ function buildWorkbook(governorates) {
 
 // زر المعالجة
 processBtn.addEventListener('click', async () => {
-  const file = fileInput.files[0];
+  const file = selectedFile;
 
   if (!file) {
     showStatus('❌ الرجاء اختيار ملف أولاً', true);

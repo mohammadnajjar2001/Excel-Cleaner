@@ -5,11 +5,13 @@ const downloadButton = document.getElementById('downloadButton');
 const statusText = document.getElementById('status');
 const resultTableBody = document.querySelector('#resultTable tbody');
 const resultDateHeader = document.querySelector('#resultTable thead th:nth-child(2)');
+const selectedFilesContainer = document.getElementById('selectedFiles');
 
 let currentRows = [];
 let filteredRows = [];
 let previewRows = [];
 let workbookSheets = [];
+let selectedFiles = [];
 let exportHeaders = ['Task', 'Date'];
 let originalFileName = 'Excel-Cleaner-Filtered.xlsx';
 let lastSelectedDate = '';
@@ -18,6 +20,84 @@ function showStatus(message, isError = false) {
   statusText.textContent = message;
   statusText.style.color = isError ? '#ba1a1a' : '#445066';
 }
+
+function getFileKey(file) {
+  return `${file.name}-${file.size}-${file.lastModified}`;
+}
+
+function resetProcessedResults() {
+  workbookSheets = [];
+  filteredRows = [];
+  previewRows = [];
+  downloadButton.disabled = true;
+  resultTableBody.innerHTML = '';
+  updateTableHeader('التاريخ');
+}
+
+function renderSelectedFiles() {
+  selectedFilesContainer.innerHTML = '<div class="selected-files-title">الملفات المختارة</div>';
+
+  if (!selectedFiles.length) {
+    const empty = document.createElement('div');
+    empty.className = 'empty-files';
+    empty.textContent = 'لم يتم اختيار أي ملفات بعد.';
+    selectedFilesContainer.appendChild(empty);
+    return;
+  }
+
+  const list = document.createElement('ul');
+  list.className = 'files-list';
+
+  selectedFiles.forEach((file, index) => {
+    const item = document.createElement('li');
+    item.className = 'file-item';
+
+    const info = document.createElement('span');
+    info.className = 'file-info';
+    info.textContent = `${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+
+    const removeButton = document.createElement('button');
+    removeButton.className = 'remove-file-btn';
+    removeButton.type = 'button';
+    removeButton.textContent = 'حذف';
+    removeButton.setAttribute('aria-label', `حذف ${file.name}`);
+    removeButton.addEventListener('click', () => {
+      selectedFiles.splice(index, 1);
+      renderSelectedFiles();
+      resetProcessedResults();
+      showStatus(selectedFiles.length ? `تم حذف الملف. المتبقي ${selectedFiles.length}.` : 'تم حذف جميع الملفات المختارة.');
+    });
+
+    item.appendChild(info);
+    item.appendChild(removeButton);
+    list.appendChild(item);
+  });
+
+  selectedFilesContainer.appendChild(list);
+}
+
+fileInput.addEventListener('change', () => {
+  const newFiles = Array.from(fileInput.files);
+  let addedCount = 0;
+
+  newFiles.forEach((file) => {
+    const exists = selectedFiles.some((selectedFile) => getFileKey(selectedFile) === getFileKey(file));
+    if (!exists) {
+      selectedFiles.push(file);
+      addedCount += 1;
+    }
+  });
+
+  fileInput.value = '';
+  renderSelectedFiles();
+  resetProcessedResults();
+
+  if (addedCount > 0) {
+    showStatus(`تمت إضافة ${addedCount} ملف. إجمالي الملفات المختارة: ${selectedFiles.length}.`);
+  } else if (newFiles.length) {
+    showStatus('هذه الملفات موجودة مسبقًا في القائمة.');
+  }
+});
 
 function parseExcelDate(value) {
   if (value instanceof Date && !Number.isNaN(value.getTime())) {
@@ -463,7 +543,7 @@ function downloadWorkbook(workbook, fileName) {
 }
 
 cleanButton.addEventListener('click', async () => {
-  const files = Array.from(fileInput.files);
+  const files = selectedFiles;
   // const selectedDate = dateInput.value;
   const filterType = document.getElementById('filterType').value;
 
