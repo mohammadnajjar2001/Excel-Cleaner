@@ -93,8 +93,34 @@ function parseExcelDate(value) {
     }
   }
 
-  const text = String(value ?? '').trim().replace(/\./g, '-').replace(/\u200f/g, '');
+  const text = String(value ?? '')
+    .trim()
+    .replace(/\u061c|\u200e|\u200f/g, '')
+    .replace(/[٠-٩]/g, (digit) => '٠١٢٣٤٥٦٧٨٩'.indexOf(digit))
+    .replace(/[۰-۹]/g, (digit) => '۰۱۲۳۴۵۶۷۸۹'.indexOf(digit))
+    .replace(/[／⁄]/g, '/')
+    .replace(/\./g, '-');
   if (!text || /^[1-4]$/.test(text)) return null;
+
+  const partsMatch = text.match(/^(\d{1,4})[\/\-](\d{1,2})[\/\-](\d{1,4})$/);
+  if (partsMatch) {
+    const first = Number(partsMatch[1]);
+    const second = Number(partsMatch[2]);
+    const third = Number(partsMatch[3]);
+    const fullYear = third < 100 ? 2000 + third : third;
+
+    if (partsMatch[1].length === 4) {
+      return new Date(first, second - 1, third);
+    }
+
+    if (second > 12) {
+      return new Date(fullYear, first - 1, second);
+    }
+
+    if (first > 12 || partsMatch[3].length === 4) {
+      return new Date(fullYear, second - 1, first);
+    }
+  }
 
   const date = new Date(text);
   return Number.isNaN(date.getTime()) ? null : date;
@@ -110,6 +136,14 @@ function normalizeDate(value) {
   return `${year}-${month}-${day}`;
 }
 
+function isDateLike(value) {
+  return Boolean(parseExcelDate(value));
+}
+
+function getDateInputValue() {
+  return dateInput.value || dateInput.valueAsDate || dateInput.getAttribute('value') || '';
+}
+
 function normalizeText(value) {
   return String(value ?? '')
     .trim()
@@ -120,11 +154,18 @@ function normalizeText(value) {
 
 function getWeekNumber(value) {
   const text = normalizeText(value)
+    .replace(/[٠-٩]/g, (digit) => '٠١٢٣٤٥٦٧٨٩'.indexOf(digit))
+    .replace(/[۰-۹]/g, (digit) => '۰۱۲۳۴۵۶۷۸۹'.indexOf(digit))
+    .replace(/[／⁄]/g, '/')
     .replace(/[اأإآ]ل/g, 'ال')
     .replace(/first|one|الاول|الأول/g, '1')
     .replace(/second|two|الثاني/g, '2')
-    .replace(/third|three|الثالث/g, '3')
+    .replace(/third|three|الثالث/g, '04/27/2026')
     .replace(/fourth|four|الرابع/g, '4');
+
+  if (/^\d{1,4}[\/\-]\d{1,2}[\/\-]\d{1,4}$/.test(text)) {
+    return null;
+  }
 
   const match = text.match(/[1-4]/);
   return match ? match[0] : null;
@@ -140,8 +181,40 @@ function getComparableValue(value) {
   return normalizeText(value);
 }
 
+function periodHeaderMatchesFilter(header, filter) {
+  if (filter.type === 'date') {
+    const normalizedTarget = normalizeDate(filter.key);
+    if (!normalizedTarget) return false;
+    return normalizeDate(header.label) === normalizedTarget || normalizeDate(header.key) === normalizedTarget;
+  }
+
+  return header.key === filter.key;
+}
+
+function periodValueMatchesFilter(value, filter) {
+  if (filter.type === 'date') {
+    const normalizedTarget = normalizeDate(filter.key);
+    if (!normalizedTarget) return false;
+    return normalizeDate(value) === normalizedTarget;
+  }
+
+  return getComparableValue(value) === filter.key;
+}
+
 function isPeriodHeader(value) {
   return Boolean(normalizeDate(value) || getWeekNumber(value));
+}
+
+function isMatchingHeaderForFilter(value, filterType) {
+  if (filterType === 'date') {
+    return isDateLike(value);
+  }
+
+  if (filterType === 'week') {
+    return Boolean(getWeekNumber(value));
+  }
+
+  return isPeriodHeader(value);
 }
 
 function isValidValueCell(value) {
@@ -190,7 +263,7 @@ function findTaskColumn(rows) {
   return 0;
 }
 
-function findPeriodHeaderRow(rows, taskColIndex) {
+function findPeriodHeaderRow(rows, taskColIndex, filterType = 'all') {
   const maxRows = Math.min(rows.length, 5);
 
   for (let rowIndex = 0; rowIndex < maxRows; rowIndex += 1) {
@@ -198,7 +271,7 @@ function findPeriodHeaderRow(rows, taskColIndex) {
     let periodCount = 0;
 
     for (let colIndex = taskColIndex + 1; colIndex < row.length; colIndex += 1) {
-      if (isPeriodHeader(row[colIndex])) periodCount += 1;
+      if (isMatchingHeaderForFilter(row[colIndex], filterType)) periodCount += 1;
     }
 
     if (periodCount >= 2) return rowIndex;
@@ -207,9 +280,9 @@ function findPeriodHeaderRow(rows, taskColIndex) {
   return null;
 }
 
-function prepareWideRows(rows) {
+function prepareWideRows(rows, filterType = 'all') {
   const taskColIndex = findTaskColumn(rows);
-  const headerRowIndex = findPeriodHeaderRow(rows, taskColIndex);
+  const headerRowIndex = findPeriodHeaderRow(rows, taskColIndex, filterType);
 
   if (headerRowIndex === null) return null;
 
@@ -217,7 +290,7 @@ function prepareWideRows(rows) {
   const periodHeaders = [];
 
   for (let colIndex = taskColIndex + 1; colIndex < headerRow.length; colIndex += 1) {
-    if (isPeriodHeader(headerRow[colIndex])) {
+    if (isMatchingHeaderForFilter(headerRow[colIndex], filterType)) {
       periodHeaders.push({
         index: colIndex,
         label: String(headerRow[colIndex] ?? '').trim(),
@@ -281,20 +354,21 @@ function prepareLongRows(rows) {
   return null;
 }
 
-function prepareRows(rows) {
+function prepareRows(rows, filterType = 'all') {
   if (!Array.isArray(rows) || rows.length === 0) return null;
-  return prepareWideRows(rows) || prepareLongRows(rows);
+  return prepareWideRows(rows, filterType) || prepareLongRows(rows);
 }
 
 function getSelectedFilter() {
   const filterType = filterTypeInput.value;
 
   if (filterType === 'date') {
+    const selectedDate = getDateInputValue();
     return {
       type: 'date',
-      key: normalizeDate(dateInput.value),
-      label: dateInput.value,
-      header: dateInput.value || 'التاريخ',
+      key: normalizeDate(selectedDate),
+      label: normalizeDate(selectedDate) || String(selectedDate || ''),
+      header: normalizeDate(selectedDate) || String(selectedDate || 'التاريخ'),
     };
   }
 
@@ -323,7 +397,7 @@ function filterPreparedRows(prepared, filter) {
       return { rows: allRows, header: 'القيمة' };
     }
 
-    const selectedHeader = prepared.periodHeaders.find((header) => header.key === filter.key);
+    const selectedHeader = prepared.periodHeaders.find((header) => periodHeaderMatchesFilter(header, filter));
     if (!selectedHeader) return { rows: [], header: filter.header };
 
     const rows = prepared.rows
@@ -341,7 +415,7 @@ function filterPreparedRows(prepared, filter) {
   }
 
   const rows = prepared.rows
-    .filter((row) => getComparableValue(row.period) === filter.key && isValidValueCell(row.value))
+    .filter((row) => periodValueMatchesFilter(row.period, filter) && isValidValueCell(row.value))
     .map((row) => ({ task: row.task, value: row.value, period: row.period }));
 
   return { rows, header: prepared.valueHeader || filter.header };
@@ -474,7 +548,7 @@ processButton.addEventListener('click', async () => {
     const sheets = workbook.SheetNames.map((sheetName) => {
       const worksheet = workbook.Sheets[sheetName];
       const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '', raw: false });
-      const prepared = prepareRows(rows);
+      const prepared = prepareRows(rows, filter.type);
       const filtered = filterPreparedRows(prepared, filter);
       return {
         name: sheetName,
