@@ -16,6 +16,44 @@ let exportHeaders = ['Task', 'Date'];
 let originalFileName = 'Excel-Cleaner-Filtered.xlsx';
 let lastSelectedDate = '';
 
+const allowedSheetNames = [
+  'المتابعة',
+  'شؤون الضباط',
+  'صف الضباط',
+  'التنمية',
+  'البيانات',
+  'المدنيين',
+  'التخطيط',
+  'الدعم',
+  'الأفراد',
+  'المالية',
+  'التوظيف',
+  'المعلوماتية',
+  'الخدمات',
+  'الديوان',
+  'المركبات',
+  'القوى البشرية',
+];
+
+const sheetNameAliases = [
+  { sheet: 'شؤون الضباط', aliases: ['شؤون الضباط', 'شئون الضباط'] },
+  { sheet: 'صف الضباط', aliases: ['صف الضباط', 'صف ضباط'] },
+  { sheet: 'القوى البشرية', aliases: ['القوى البشرية', 'القوه البشريه', 'القوة البشرية'] },
+  { sheet: 'الأفراد', aliases: ['الأفراد', 'الافراد'] },
+  { sheet: 'المدنيين', aliases: ['المدنيين', 'العاملين المدنيين', 'مدنيين'] },
+  { sheet: 'المتابعة', aliases: ['المتابعة', 'المتابعه'] },
+  { sheet: 'المعلوماتية', aliases: ['المعلوماتية', 'المعلوماتيه'] },
+  { sheet: 'التوظيف', aliases: ['التوظيف'] },
+  { sheet: 'التخطيط', aliases: ['التخطيط'] },
+  { sheet: 'التنمية', aliases: ['التنمية', 'التنميه'] },
+  { sheet: 'البيانات', aliases: ['البيانات'] },
+  { sheet: 'الدعم', aliases: ['الدعم'] },
+  { sheet: 'المالية', aliases: ['المالية', 'الماليه', 'المالي'] },
+  { sheet: 'الخدمات', aliases: ['الخدمات', 'خدمات'] },
+  { sheet: 'الديوان', aliases: ['الديوان'] },
+  { sheet: 'المركبات', aliases: ['المركبات'] },
+];
+
 function showStatus(message, isError = false) {
   statusText.textContent = message;
   statusText.style.color = isError ? '#ba1a1a' : '#445066';
@@ -412,32 +450,118 @@ function renderTable(rows) {
   });
 }
 
+function normalizeArabicName(value) {
+  return String(value || '')
+    .normalize('NFKC')
+    .replace(/[\u064B-\u065F\u0670]/g, '')
+    .replace(/[إأآا]/g, 'ا')
+    .replace(/ى/g, 'ي')
+    .replace(/ة/g, 'ه')
+    .replace(/ؤ/g, 'و')
+    .replace(/ئ/g, 'ي')
+    .replace(/\u0640/g, '')
+    .replace(/[^\p{L}\p{N}\s]/gu, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
+}
+
 function getSheetNameFromFile(fileName) {
-  const baseName = fileName.replace(/\.xlsx$/i, '').replace(/[^\w\u0600-\u06FF \-]/g, '');
-  const trimmed = baseName.trim();
-  if (!trimmed) {
-    return 'Sheet1';
+  const baseName = fileName.replace(/\.(xlsx|xls|csv)$/i, '');
+  const normalizedBaseName = normalizeArabicName(baseName);
+
+  const matched = sheetNameAliases.find((entry) =>
+    entry.aliases.some((alias) => normalizedBaseName.includes(normalizeArabicName(alias)))
+  );
+
+  if (matched) {
+    return matched.sheet;
   }
-  return trimmed.substring(0, 31);
+
+  const directMatch = allowedSheetNames.find((sheetName) =>
+    normalizedBaseName.includes(normalizeArabicName(sheetName))
+  );
+
+  if (directMatch) {
+    return directMatch;
+  }
+
+  const cleanedBaseName = baseName.replace(/[^\w\u0600-\u06FF \-]/g, '');
+  const trimmed = cleanedBaseName.trim();
+  return trimmed ? trimmed.substring(0, 31) : 'Sheet1';
+}
+
+function mergeSheetsByName(sheets) {
+  const merged = new Map();
+
+  sheets.forEach((sheet) => {
+    const sheetName = allowedSheetNames.includes(sheet.name) ? sheet.name : getSheetNameFromFile(sheet.name);
+
+    if (!merged.has(sheetName)) {
+      merged.set(sheetName, {
+        name: sheetName,
+        headers: sheet.headers,
+        rows: [],
+      });
+    }
+
+    const current = merged.get(sheetName);
+    if (sheet.rows.length && sheet.headers?.[1]) {
+      current.headers = sheet.headers;
+    }
+    current.rows.push(...sheet.rows);
+  });
+
+  return Array.from(merged.values()).sort((a, b) => {
+    const aIndex = allowedSheetNames.indexOf(a.name);
+    const bIndex = allowedSheetNames.indexOf(b.name);
+
+    if (aIndex === -1 && bIndex === -1) {
+      return a.name.localeCompare(b.name, 'ar');
+    }
+
+    if (aIndex === -1) return 1;
+    if (bIndex === -1) return -1;
+    return aIndex - bIndex;
+  });
+}
+
+function makeUniqueSheetName(workbook, baseName) {
+  const safeBaseName = String(baseName || 'Sheet1').substring(0, 31);
+  let sheetName = safeBaseName;
+  let suffix = 1;
+
+  while (workbook.SheetNames.includes(sheetName)) {
+    const suffixText = `-${suffix}`;
+    sheetName = `${safeBaseName.substring(0, 31 - suffixText.length)}${suffixText}`;
+    suffix += 1;
+  }
+
+  return sheetName;
 }
 
 function buildWorkbookFromSheets(sheets) {
   const workbook = XLSX.utils.book_new();
 
-  sheets.forEach((sheet) => {
-    let sheetName = sheet.name;
-    let suffix = 1;
-    while (workbook.SheetNames.includes(sheetName)) {
-      sheetName = `${sheet.name}-${suffix}`;
-      suffix += 1;
-    }
+  mergeSheetsByName(sheets).forEach((sheet) => {
+    const sheetName = makeUniqueSheetName(workbook, sheet.name);
 
     const sortedRows = sortRowsDescending([...sheet.rows]);
+    const exportRows = addNumericPercentSeparatorRows(sortedRows);
 
     const sheetData = [
+      ['مهام ال card', ''],
+      ['', ''],
+      ['', ''],
       sheet.headers,
-      ...sortedRows.map((row) => [row.task || '', String(row.date || '')])
-    ]; const worksheet = XLSX.utils.aoa_to_sheet(sheetData);
+      ...exportRows.map((row) => [row.task || '', String(row.date || '')])
+    ];
+    const worksheet = XLSX.utils.aoa_to_sheet(sheetData);
+    worksheet['A1'].s = {
+      fill: { fgColor: { rgb: 'D9EAD3' } },
+      font: { bold: true },
+      alignment: { horizontal: 'center' },
+    };
     worksheet['!sheetViews'] = [{ RTL: true }];
     worksheet['!cols'] = [{ wch: 60 }, { wch: 20 }];
     XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
@@ -446,6 +570,52 @@ function buildWorkbookFromSheets(sheets) {
   workbook.Workbook = workbook.Workbook || {};
   workbook.Workbook.Views = workbook.Workbook.Views || [{ RTL: true }];
   return workbook;
+}
+
+function getValueCategory(value) {
+  if (value === null || value === undefined) {
+    return { type: 3, value: 0 };
+  }
+
+  const str = String(value).trim();
+
+  if (str.endsWith('%')) {
+    return {
+      type: 2,
+      value: parseFloat(str.replace('%', '')) || 0,
+    };
+  }
+
+  if (!isNaN(str)) {
+    return {
+      type: 1,
+      value: parseFloat(str),
+    };
+  }
+
+  return {
+    type: 3,
+    value: 0,
+  };
+}
+
+function addNumericPercentSeparatorRows(rows) {
+  const output = [];
+
+  rows.forEach((row, index) => {
+    if (index > 0) {
+      const previousType = getValueCategory(rows[index - 1].date).type;
+      const currentType = getValueCategory(row.date).type;
+
+      if (previousType === 1 && currentType === 2) {
+        output.push({ task: '', date: '' }, { task: '', date: '' });
+      }
+    }
+
+    output.push(row);
+  });
+
+  return output;
 }
 
 function processFile(file, selectedDate) {
@@ -498,36 +668,8 @@ function buildWorkbook(rows, sheetName) {
 }
 function sortRowsDescending(rows) {
   return rows.sort((a, b) => {
-    const parseValue = (val) => {
-      if (val === null || val === undefined) return { type: 3, value: 0 };
-
-      const str = String(val).trim();
-
-      // نسبة مئوية
-      if (str.endsWith('%')) {
-        return {
-          type: 2,
-          value: parseFloat(str.replace('%', '')) || 0,
-        };
-      }
-
-      // رقم
-      if (!isNaN(str)) {
-        return {
-          type: 1,
-          value: parseFloat(str),
-        };
-      }
-
-      // نص أو شيء آخر
-      return {
-        type: 3,
-        value: 0,
-      };
-    };
-
-    const aVal = parseValue(a.date);
-    const bVal = parseValue(b.date);
+    const aVal = getValueCategory(a.date);
+    const bVal = getValueCategory(b.date);
 
     // أولاً حسب النوع
     if (aVal.type !== bVal.type) {

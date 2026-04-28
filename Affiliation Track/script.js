@@ -433,11 +433,21 @@ function buildWorkbookFromSheets(sheets) {
     }
 
     const sortedRows = sortRowsDescending([...sheet.rows]);
+    const exportRows = addNumericPercentSeparatorRows(sortedRows);
 
     const sheetData = [
+      ['مهام ال card', ''],
+      ['', ''],
+      ['', ''],
       sheet.headers,
-      ...sortedRows.map((row) => [row.task || '', String(row.date || '')])
-    ]; const worksheet = XLSX.utils.aoa_to_sheet(sheetData);
+      ...exportRows.map((row) => [row.task || '', String(row.date || '')])
+    ];
+    const worksheet = XLSX.utils.aoa_to_sheet(sheetData);
+    worksheet['A1'].s = {
+      fill: { fgColor: { rgb: 'D9EAD3' } },
+      font: { bold: true },
+      alignment: { horizontal: 'center' },
+    };
     worksheet['!sheetViews'] = [{ RTL: true }];
     worksheet['!cols'] = [{ wch: 60 }, { wch: 20 }];
     XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
@@ -496,38 +506,57 @@ function buildWorkbook(rows, sheetName) {
 
   return workbook;
 }
+
+function getValueCategory(value) {
+  if (value === null || value === undefined) {
+    return { type: 3, value: 0 };
+  }
+
+  const str = String(value).trim();
+
+  if (str.endsWith('%')) {
+    return {
+      type: 2,
+      value: parseFloat(str.replace('%', '')) || 0,
+    };
+  }
+
+  if (!isNaN(str)) {
+    return {
+      type: 1,
+      value: parseFloat(str),
+    };
+  }
+
+  return {
+    type: 3,
+    value: 0,
+  };
+}
+
+function addNumericPercentSeparatorRows(rows) {
+  const output = [];
+
+  rows.forEach((row, index) => {
+    if (index > 0) {
+      const previousType = getValueCategory(rows[index - 1].date).type;
+      const currentType = getValueCategory(row.date).type;
+
+      if (previousType === 1 && currentType === 2) {
+        output.push({ task: '', date: '' }, { task: '', date: '' });
+      }
+    }
+
+    output.push(row);
+  });
+
+  return output;
+}
+
 function sortRowsDescending(rows) {
   return rows.sort((a, b) => {
-    const parseValue = (val) => {
-      if (val === null || val === undefined) return { type: 3, value: 0 };
-
-      const str = String(val).trim();
-
-      // نسبة مئوية
-      if (str.endsWith('%')) {
-        return {
-          type: 2,
-          value: parseFloat(str.replace('%', '')) || 0,
-        };
-      }
-
-      // رقم
-      if (!isNaN(str)) {
-        return {
-          type: 1,
-          value: parseFloat(str),
-        };
-      }
-
-      // نص أو شيء آخر
-      return {
-        type: 3,
-        value: 0,
-      };
-    };
-
-    const aVal = parseValue(a.date);
-    const bVal = parseValue(b.date);
+    const aVal = getValueCategory(a.date);
+    const bVal = getValueCategory(b.date);
 
     // أولاً حسب النوع
     if (aVal.type !== bVal.type) {

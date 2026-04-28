@@ -423,19 +423,56 @@ function filterPreparedRows(prepared, filter) {
 
 function sortRowsDescending(rows) {
   return rows.sort((a, b) => {
-    const parseValue = (value) => {
-      const text = String(value ?? '').trim();
-      if (text.endsWith('%')) return { type: 2, value: parseFloat(text.replace('%', '')) || 0 };
-      if (!Number.isNaN(Number(text))) return { type: 1, value: Number(text) };
-      return { type: 3, value: 0 };
-    };
-
-    const left = parseValue(a.value);
-    const right = parseValue(b.value);
+    const left = getValueCategory(a.value);
+    const right = getValueCategory(b.value);
 
     if (left.type !== right.type) return left.type - right.type;
     return right.value - left.value;
   });
+}
+
+function getValueCategory(value) {
+  const text = String(value ?? '').trim();
+  if (text.endsWith('%')) return { type: 2, value: parseFloat(text.replace('%', '')) || 0 };
+  if (!Number.isNaN(Number(text)) && text !== '') return { type: 1, value: Number(text) };
+  return { type: 3, value: 0 };
+}
+
+function addNumericPercentSeparatorRows(rows) {
+  const output = [];
+
+  rows.forEach((row, index) => {
+    if (index > 0) {
+      const previousType = getValueCategory(rows[index - 1].value).type;
+      const currentType = getValueCategory(row.value).type;
+
+      if (previousType === 1 && currentType === 2) {
+        output.push({ task: '', period: '', value: '' }, { task: '', period: '', value: '' });
+      }
+    }
+
+    output.push(row);
+  });
+
+  return output;
+}
+
+function normalizeArabicSheetName(value) {
+  return String(value || '')
+    .normalize('NFKC')
+    .replace(/[\u064B-\u065F\u0670]/g, '')
+    .replace(/[إأآا]/g, 'ا')
+    .replace(/ى/g, 'ي')
+    .replace(/ة/g, 'ه')
+    .replace(/\u0640/g, '')
+    .replace(/[^\p{L}\p{N}\s]/gu, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
+}
+
+function isHousingBranchSheet(sheetName) {
+  return normalizeArabicSheetName(sheetName).includes(normalizeArabicSheetName('فرع السكن'));
 }
 
 function getSafeSheetName(name, usedNames) {
@@ -463,16 +500,33 @@ function buildWorkbook(sheets, filter) {
 
   sheets.forEach((sheet) => {
     const sortedRows = sortRowsDescending([...sheet.rows]);
+    const exportRows = addNumericPercentSeparatorRows(sortedRows);
     const headerRow = filter.type === 'all' ? ['المهمة', 'الفترة', sheet.header] : ['المهمة', sheet.header];
+    const rowWidth = headerRow.length;
+    const cardRows = isHousingBranchSheet(sheet.name)
+      ? [
+          ['مهام ال card', ...Array(rowWidth - 1).fill('')],
+          Array(rowWidth).fill(''),
+          Array(rowWidth).fill(''),
+        ]
+      : [];
     const sheetData = [
+      ...cardRows,
       headerRow,
-      ...sortedRows.map((row) => (
+      ...exportRows.map((row) => (
         filter.type === 'all'
           ? [row.task || '', row.period || '', row.value ?? '']
           : [row.task || '', row.value ?? '']
       )),
     ];
     const worksheet = XLSX.utils.aoa_to_sheet(sheetData);
+    if (cardRows.length && worksheet['A1']) {
+      worksheet['A1'].s = {
+        fill: { fgColor: { rgb: 'D9EAD3' } },
+        font: { bold: true },
+        alignment: { horizontal: 'center' },
+      };
+    }
     worksheet['!sheetViews'] = [{ RTL: true }];
     worksheet['!cols'] = filter.type === 'all'
       ? [{ wch: 55 }, { wch: 18 }, { wch: 18 }]
