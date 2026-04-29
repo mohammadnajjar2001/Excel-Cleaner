@@ -390,7 +390,14 @@ function filterPreparedRows(prepared, filter) {
         prepared.periodHeaders.forEach((header) => {
           const value = row.values[header.key];
           if (isValidValueCell(value)) {
-            allRows.push({ task: row.task, value, period: header.label });
+            const proofread = proofreadTask(row.task);
+            allRows.push({
+              task: proofread.task,
+              originalTask: proofread.originalTask,
+              taskChanged: proofread.taskChanged,
+              value,
+              period: header.label,
+            });
           }
         });
       });
@@ -402,23 +409,82 @@ function filterPreparedRows(prepared, filter) {
 
     const rows = prepared.rows
       .filter((row) => isValidValueCell(row.values[selectedHeader.key]))
-      .map((row) => ({ task: row.task, value: row.values[selectedHeader.key], period: selectedHeader.label }));
+      .map((row) => {
+        const proofread = proofreadTask(row.task);
+        return {
+          task: proofread.task,
+          originalTask: proofread.originalTask,
+          taskChanged: proofread.taskChanged,
+          value: row.values[selectedHeader.key],
+          period: selectedHeader.label,
+        };
+      });
 
     return { rows, header: selectedHeader.label || filter.header };
   }
 
   if (filter.type === 'all') {
     return {
-      rows: prepared.rows.filter((row) => isValidValueCell(row.value)),
+      rows: prepared.rows
+        .filter((row) => isValidValueCell(row.value))
+        .map((row) => {
+          const proofread = proofreadTask(row.task);
+          return {
+            ...row,
+            task: proofread.task,
+            originalTask: proofread.originalTask,
+            taskChanged: proofread.taskChanged,
+          };
+        }),
       header: prepared.valueHeader || 'القيمة',
     };
   }
 
   const rows = prepared.rows
     .filter((row) => periodValueMatchesFilter(row.period, filter) && isValidValueCell(row.value))
-    .map((row) => ({ task: row.task, value: row.value, period: row.period }));
+    .map((row) => {
+      const proofread = proofreadTask(row.task);
+      return {
+        task: proofread.task,
+        originalTask: proofread.originalTask,
+        taskChanged: proofread.taskChanged,
+        value: row.value,
+        period: row.period,
+      };
+    });
 
   return { rows, header: prepared.valueHeader || filter.header };
+}
+
+function normalizeOriginalTaskForCompare(value) {
+  return String(value ?? '')
+    .replace(/\u0640/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function normalizeTaskSpacing(value) {
+  return String(value ?? '')
+    .replace(/\u0640/g, '')
+    .replace(/\s+/g, ' ')
+    .replace(/\s+([،؛:,.!?])/g, '$1')
+    .replace(/([،؛:,.!?])(?=\S)/g, '$1 ')
+    .replace(/\s*-\s*/g, ' - ')
+    .replace(/\(\s+/g, '(')
+    .replace(/\s+\)/g, ')')
+    .replace(/[.。]+$/g, '')
+    .trim();
+}
+
+function proofreadTask(task) {
+  const originalTask = String(task ?? '');
+  const correctedTask = normalizeTaskSpacing(originalTask);
+
+  return {
+    task: correctedTask,
+    originalTask,
+    taskChanged: correctedTask !== normalizeOriginalTaskForCompare(originalTask),
+  };
 }
 
 function sortRowsDescending(rows) {
@@ -527,6 +593,20 @@ function buildWorkbook(sheets, filter) {
         alignment: { horizontal: 'center' },
       };
     }
+    exportRows.forEach((row, index) => {
+      if (!row.taskChanged) return;
+
+      const cellAddress = XLSX.utils.encode_cell({ r: cardRows.length + 1 + index, c: 0 });
+      worksheet[cellAddress] = worksheet[cellAddress] || { t: 's', v: row.task || '' };
+      worksheet[cellAddress].s = {
+        fill: {
+          patternType: 'solid',
+          fgColor: { rgb: 'FFFF00' },
+          bgColor: { rgb: 'FFFF00' },
+        },
+        font: { color: { rgb: '000000' } },
+      };
+    });
     worksheet['!sheetViews'] = [{ RTL: true }];
     worksheet['!cols'] = filter.type === 'all'
       ? [{ wch: 55 }, { wch: 18 }, { wch: 18 }]

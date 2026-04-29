@@ -353,16 +353,52 @@ function isValidValueCell(value) {
   return true;
 }
 
+function normalizeOriginalTaskForCompare(value) {
+  return String(value ?? '')
+    .replace(/\u0640/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function normalizeTaskSpacing(value) {
+  return String(value ?? '')
+    .replace(/\u0640/g, '')
+    .replace(/\s+/g, ' ')
+    .replace(/\s+([،؛:,.!?])/g, '$1')
+    .replace(/([،؛:,.!?])(?=\S)/g, '$1 ')
+    .replace(/\s*-\s*/g, ' - ')
+    .replace(/\(\s+/g, '(')
+    .replace(/\s+\)/g, ')')
+    .replace(/[.。]+$/g, '')
+    .trim();
+}
+
+function proofreadTask(task) {
+  const originalTask = String(task ?? '');
+  const correctedTask = normalizeTaskSpacing(originalTask);
+
+  return {
+    task: correctedTask,
+    originalTask,
+    taskChanged: correctedTask !== normalizeOriginalTaskForCompare(originalTask),
+  };
+}
+
 function filterLongRows(rows, dateValue) {
   const normalizedTarget = normalizeDate(dateValue);
   if (!normalizedTarget) return [];
 
   return rows
     .filter((row) => normalizeDate(row.date) === normalizedTarget && isValidValueCell(row.date))
-    .map((row) => ({
-      task: row.task,
-      date: row.date,
-    }));
+    .map((row) => {
+      const proofread = proofreadTask(row.task);
+      return {
+        task: proofread.task,
+        originalTask: proofread.originalTask,
+        taskChanged: proofread.taskChanged,
+        date: row.date,
+      };
+    });
 }
 
 function filterWideRows(rows, dateValue, dateHeaders) {
@@ -376,10 +412,15 @@ function filterWideRows(rows, dateValue, dateHeaders) {
 
   const filtered = rows
     .filter((row) => isValidValueCell(row.dateValues[selectedHeader]))
-    .map((row) => ({
-      task: row.task,
-      date: row.dateValues[selectedHeader],
-    }));
+    .map((row) => {
+      const proofread = proofreadTask(row.task);
+      return {
+        task: proofread.task,
+        originalTask: proofread.originalTask,
+        taskChanged: proofread.taskChanged,
+        date: row.dateValues[selectedHeader],
+      };
+    });
 
   return { filtered, selectedHeader };
 }
@@ -448,6 +489,20 @@ function buildWorkbookFromSheets(sheets) {
       font: { bold: true },
       alignment: { horizontal: 'center' },
     };
+    exportRows.forEach((row, index) => {
+      if (!row.taskChanged) return;
+
+      const cellAddress = XLSX.utils.encode_cell({ r: index + 4, c: 0 });
+      worksheet[cellAddress] = worksheet[cellAddress] || { t: 's', v: row.task || '' };
+      worksheet[cellAddress].s = {
+        fill: {
+          patternType: 'solid',
+          fgColor: { rgb: 'FFFF00' },
+          bgColor: { rgb: 'FFFF00' },
+        },
+        font: { color: { rgb: '000000' } },
+      };
+    });
     worksheet['!sheetViews'] = [{ RTL: true }];
     worksheet['!cols'] = [{ wch: 60 }, { wch: 20 }];
     XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);

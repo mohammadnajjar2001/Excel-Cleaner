@@ -54,6 +54,239 @@ const sheetNameAliases = [
   { sheet: 'المركبات', aliases: ['المركبات'] },
 ];
 
+const taskProofreadingRules = [
+  { pattern: /احالة مزكرات/g, replacement: 'إحالة مذكرات' },
+  { pattern: /البريد الوارد و الضادر/g, replacement: 'البريد الوارد والصادر' },
+  { pattern: /البريد الوارد والضادر/g, replacement: 'البريد الوارد والصادر' },
+  { pattern: /البريد الضادر/g, replacement: 'البريد الصادر' },
+  { pattern: /البريد الضادره/g, replacement: 'البريد الصادر' },
+  { pattern: /الضادر/g, replacement: 'الصادر' },
+  { pattern: /الضادره/g, replacement: 'الصادرة' },
+  { pattern: /ضادر/g, replacement: 'صادر' },
+  { pattern: /ضادره/g, replacement: 'صادرة' },
+  { pattern: /احالات/g, replacement: 'إحالات' },
+  { pattern: /احالة/g, replacement: 'إحالة' },
+  { pattern: /الغاءات/g, replacement: 'إلغاءات' },
+  { pattern: /الغاء/g, replacement: 'إلغاء' },
+  { pattern: /المنع سفر/g, replacement: 'منع سفر' },
+  { pattern: /الكف يد/g, replacement: 'كف يد' },
+  { pattern: /مزكرات/g, replacement: 'مذكرات' },
+  { pattern: /مزكرة/g, replacement: 'مذكرة' },
+  { pattern: /مخاطبه/g, replacement: 'مخاطبة' },
+  { pattern: /المخاطبه/g, replacement: 'المخاطبة' },
+  { pattern: /مراسله/g, replacement: 'مراسلة' },
+  { pattern: /المراسله/g, replacement: 'المراسلة' },
+  { pattern: /الصادره/g, replacement: 'الصادرة' },
+  { pattern: /الواردات/g, replacement: 'الواردات' },
+  { pattern: /وارده/g, replacement: 'واردة' },
+  { pattern: /الصادر/g, replacement: 'الصادر' },
+  { pattern: /الاجازات/g, replacement: 'الإجازات' },
+  { pattern: /اجازات/g, replacement: 'إجازات' },
+  { pattern: /اجازة/g, replacement: 'إجازة' },
+  { pattern: /اجازه/g, replacement: 'إجازة' },
+  { pattern: /الاجازه/g, replacement: 'الإجازة' },
+  { pattern: /اذونات/g, replacement: 'إذونات' },
+  { pattern: /اذن/g, replacement: 'إذن' },
+  { pattern: /الاذونات/g, replacement: 'الإذونات' },
+  { pattern: /الاذن/g, replacement: 'الإذن' },
+  { pattern: /ادخال/g, replacement: 'إدخال' },
+  { pattern: /الادخال/g, replacement: 'الإدخال' },
+  { pattern: /ادارة/g, replacement: 'إدارة' },
+  { pattern: /الادارات/g, replacement: 'الإدارات' },
+  { pattern: /الادارة/g, replacement: 'الإدارة' },
+  { pattern: /الاجراءات/g, replacement: 'الإجراءات' },
+  { pattern: /اجراءات/g, replacement: 'إجراءات' },
+  { pattern: /اجراء/g, replacement: 'إجراء' },
+  { pattern: /الاحالات/g, replacement: 'الإحالات' },
+  { pattern: /الاحالة/g, replacement: 'الإحالة' },
+  { pattern: /الايجارات/g, replacement: 'الإيجارات' },
+  { pattern: /ايجارات/g, replacement: 'إيجارات' },
+  { pattern: /ايجار/g, replacement: 'إيجار' },
+  { pattern: /الاخلاءات/g, replacement: 'الإخلاءات' },
+  { pattern: /اخلاءات/g, replacement: 'إخلاءات' },
+  { pattern: /اخلاء/g, replacement: 'إخلاء' },
+  { pattern: /الاعفاءات/g, replacement: 'الإعفاءات' },
+  { pattern: /اعفاءات/g, replacement: 'إعفاءات' },
+  { pattern: /اعفاء/g, replacement: 'إعفاء' },
+  { pattern: /الاقامات/g, replacement: 'الإقامات' },
+  { pattern: /اقامات/g, replacement: 'إقامات' },
+  { pattern: /اقامة/g, replacement: 'إقامة' },
+  { pattern: /اقامه/g, replacement: 'إقامة' },
+  { pattern: /الاقامة/g, replacement: 'الإقامة' },
+  { pattern: /الاقامه/g, replacement: 'الإقامة' },
+  { pattern: /الاستمارات/g, replacement: 'الاستمارات' },
+  { pattern: /استماره/g, replacement: 'استمارة' },
+  { pattern: /الاستماره/g, replacement: 'الاستمارة' },
+  { pattern: /المعامله/g, replacement: 'المعاملة' },
+  { pattern: /معامله/g, replacement: 'معاملة' },
+  { pattern: /المعاملات/g, replacement: 'المعاملات' },
+  { pattern: /الاستبيانات/g, replacement: 'الاستبيانات' },
+  { pattern: /استبيان/g, replacement: 'استبيان' },
+  { pattern: /الالكتروني/g, replacement: 'الإلكتروني' },
+  { pattern: /الالكترونية/g, replacement: 'الإلكترونية' },
+  { pattern: /الالكترونيه/g, replacement: 'الإلكترونية' },
+  { pattern: /الكترونيا/g, replacement: 'إلكترونياً' },
+  { pattern: /الكتروني/g, replacement: 'إلكتروني' },
+  { pattern: /الكترونية/g, replacement: 'إلكترونية' },
+  { pattern: /الكترونيه/g, replacement: 'إلكترونية' },
+  { pattern: /الإلكترونيه/g, replacement: 'الإلكترونية' },
+  { pattern: /إلكترونيه/g, replacement: 'إلكترونية' },
+  { pattern: /الارشفة/g, replacement: 'الأرشفة' },
+  { pattern: /ارشفة/g, replacement: 'أرشفة' },
+  { pattern: /الارشفه/g, replacement: 'الأرشفة' },
+  { pattern: /ارشفه/g, replacement: 'أرشفة' },
+  { pattern: /الاحصاءات/g, replacement: 'الإحصاءات' },
+  { pattern: /احصاءات/g, replacement: 'إحصاءات' },
+  { pattern: /احصاء/g, replacement: 'إحصاء' },
+  { pattern: /الانشاء/g, replacement: 'الإنشاء' },
+  { pattern: /انشاء/g, replacement: 'إنشاء' },
+  { pattern: /الاصدار/g, replacement: 'الإصدار' },
+  { pattern: /اصدار/g, replacement: 'إصدار' },
+  { pattern: /الانجازات/g, replacement: 'الإنجازات' },
+  { pattern: /انجازات/g, replacement: 'إنجازات' },
+  { pattern: /انجاز/g, replacement: 'إنجاز' },
+  { pattern: /الانجاز/g, replacement: 'الإنجاز' },
+  { pattern: /الاعمال/g, replacement: 'الأعمال' },
+  { pattern: /اعمال/g, replacement: 'أعمال' },
+  { pattern: /الاوامر/g, replacement: 'الأوامر' },
+  { pattern: /اوامر/g, replacement: 'أوامر' },
+  { pattern: /امر/g, replacement: 'أمر' },
+  { pattern: /الاولوية/g, replacement: 'الأولوية' },
+  { pattern: /اولويه/g, replacement: 'أولوية' },
+  { pattern: /اولوية/g, replacement: 'أولوية' },
+  { pattern: /اسبوعية/g, replacement: 'أسبوعية' },
+  { pattern: /اسبوعيه/g, replacement: 'أسبوعية' },
+  { pattern: /اسبوعي/g, replacement: 'أسبوعي' },
+  { pattern: /اسبوع/g, replacement: 'أسبوع' },
+  { pattern: /الاسبوع/g, replacement: 'الأسبوع' },
+  { pattern: /الاسبوعية/g, replacement: 'الأسبوعية' },
+  { pattern: /الاسبوعيه/g, replacement: 'الأسبوعية' },
+  { pattern: /اوامر/g, replacement: 'أوامر' },
+  { pattern: /ايصالات/g, replacement: 'إيصالات' },
+  { pattern: /ايصال/g, replacement: 'إيصال' },
+  { pattern: /الملاحظات/g, replacement: 'الملاحظات' },
+  { pattern: /تامين/g, replacement: 'تأمين' },
+  { pattern: /تدقيق/g, replacement: 'تدقيق' },
+  { pattern: /تحديث/g, replacement: 'تحديث' },
+  { pattern: /تعديل/g, replacement: 'تعديل' },
+  { pattern: /تصنيف/g, replacement: 'تصنيف' },
+  { pattern: /تعميم/g, replacement: 'تعميم' },
+  { pattern: /تنسيق/g, replacement: 'تنسيق' },
+  { pattern: /تقرير/g, replacement: 'تقرير' },
+  { pattern: /تقارير/g, replacement: 'تقارير' },
+  { pattern: /متابعة/g, replacement: 'متابعة' },
+  { pattern: /متابعه/g, replacement: 'متابعة' },
+  { pattern: /المتابعه/g, replacement: 'المتابعة' },
+  { pattern: /معالجة/g, replacement: 'معالجة' },
+  { pattern: /معالجه/g, replacement: 'معالجة' },
+  { pattern: /المعالجه/g, replacement: 'المعالجة' },
+  { pattern: /المراجعه/g, replacement: 'المراجعة' },
+  { pattern: /مراجعه/g, replacement: 'مراجعة' },
+  { pattern: /مطابقه/g, replacement: 'مطابقة' },
+  { pattern: /المطابقه/g, replacement: 'المطابقة' },
+  { pattern: /مخالفه/g, replacement: 'مخالفة' },
+  { pattern: /المخالفه/g, replacement: 'المخالفة' },
+  { pattern: /مخالفات/g, replacement: 'مخالفات' },
+  { pattern: /مرفقات/g, replacement: 'مرفقات' },
+  { pattern: /مرفق/g, replacement: 'مرفق' },
+  { pattern: /مستندات/g, replacement: 'مستندات' },
+  { pattern: /مستند/g, replacement: 'مستند' },
+  { pattern: /نموذج/g, replacement: 'نموذج' },
+  { pattern: /نماذج/g, replacement: 'نماذج' },
+  { pattern: /لائحه/g, replacement: 'لائحة' },
+  { pattern: /اللائحه/g, replacement: 'اللائحة' },
+  { pattern: /شهاده/g, replacement: 'شهادة' },
+  { pattern: /الشهاده/g, replacement: 'الشهادة' },
+  { pattern: /شهادات/g, replacement: 'شهادات' },
+  { pattern: /بيانات/g, replacement: 'بيانات' },
+  { pattern: /بيان/g, replacement: 'بيان' },
+  { pattern: /احضار/g, replacement: 'إحضار' },
+  { pattern: /الحاق/g, replacement: 'إلحاق' },
+  { pattern: /الحاقي/g, replacement: 'إلحاقي' },
+  { pattern: /المركزيه/g, replacement: 'المركزية' },
+  { pattern: /المركزية/g, replacement: 'المركزية' },
+  { pattern: /الفروع/g, replacement: 'الفروع' },
+  { pattern: /الاقسام/g, replacement: 'الأقسام' },
+  { pattern: /اقسام/g, replacement: 'أقسام' },
+  { pattern: /سكنيه/g, replacement: 'سكنية' },
+  { pattern: /السكنيه/g, replacement: 'السكنية' },
+  { pattern: /اليوميه/g, replacement: 'اليومية' },
+  { pattern: /يوميه/g, replacement: 'يومية' },
+  { pattern: /ربعيه/g, replacement: 'ربعية' },
+  { pattern: /سنويه/g, replacement: 'سنوية' },
+  { pattern: /المدنيه/g, replacement: 'المدنية' },
+  { pattern: /مدنيه/g, replacement: 'مدنية' },
+  { pattern: /الشكاوي/g, replacement: 'الشكاوى' },
+  { pattern: /شكوي/g, replacement: 'شكوى' },
+  { pattern: /دعوي/g, replacement: 'دعوى' },
+  { pattern: /الدعاوي/g, replacement: 'الدعاوى' },
+  { pattern: /الملاحضات/g, replacement: 'الملاحظات' },
+  { pattern: /ملاحضات/g, replacement: 'ملاحظات' },
+  { pattern: /ملاحضه/g, replacement: 'ملاحظة' },
+  { pattern: /الخاصه/g, replacement: 'الخاصة' },
+  { pattern: /خاصه/g, replacement: 'خاصة' },
+  { pattern: /الشهريه/g, replacement: 'الشهرية' },
+  { pattern: /شهريه/g, replacement: 'شهرية' },
+  { pattern: /السنويه/g, replacement: 'السنوية' },
+  { pattern: /سنويه/g, replacement: 'سنوية' },
+  { pattern: /المهام/g, replacement: 'المهام' },
+  { pattern: /المهمه/g, replacement: 'المهمة' },
+  { pattern: /المهنية/g, replacement: 'المهنية' },
+  { pattern: /وظيفه/g, replacement: 'وظيفة' },
+  { pattern: /الوظيفه/g, replacement: 'الوظيفة' },
+  { pattern: /وظائف/g, replacement: 'وظائف' },
+  { pattern: /توظيف/g, replacement: 'توظيف' },
+  { pattern: /المعلوماتيه/g, replacement: 'المعلوماتية' },
+  { pattern: /الماليه/g, replacement: 'المالية' },
+  { pattern: /الخدميه/g, replacement: 'الخدمية' },
+  { pattern: /البشريه/g, replacement: 'البشرية' },
+  { pattern: /القوه/g, replacement: 'القوة' },
+  { pattern: /القوي/g, replacement: 'القوى' },
+  { pattern: /الافراد/g, replacement: 'الأفراد' },
+  { pattern: /الضباط/g, replacement: 'الضباط' },
+  { pattern: /شئون/g, replacement: 'شؤون' },
+  { pattern: /مسؤلية/g, replacement: 'مسؤولية' },
+  { pattern: /مسؤوليه/g, replacement: 'مسؤولية' },
+  { pattern: /مسؤل/g, replacement: 'مسؤول' },
+  { pattern: /مسوول/g, replacement: 'مسؤول' },
+];
+
+function normalizeTaskSpacing(value, removeTrailingDot = true) {
+  let normalized = String(value ?? '')
+    .replace(/\u0640/g, '')
+    .replace(/\s+/g, ' ')
+    .replace(/\s+([،؛:,.!?])/g, '$1')
+    .replace(/([،؛:,.!?])(?=\S)/g, '$1 ')
+    .replace(/\s*-\s*/g, ' - ')
+    .replace(/\(\s+/g, '(')
+    .replace(/\s+\)/g, ')')
+    .trim();
+
+  if (removeTrailingDot) {
+    normalized = normalized.replace(/[.。]+$/g, '').trim();
+  }
+
+  return normalized;
+}
+
+function proofreadTask(task) {
+  const originalTask = String(task ?? '');
+  const comparableOriginalTask = normalizeTaskSpacing(originalTask, false);
+  let correctedTask = normalizeTaskSpacing(originalTask);
+
+  taskProofreadingRules.forEach((rule) => {
+    correctedTask = correctedTask.replace(rule.pattern, rule.replacement);
+  });
+
+  correctedTask = normalizeTaskSpacing(correctedTask);
+
+  return {
+    task: correctedTask,
+    originalTask,
+    taskChanged: correctedTask !== comparableOriginalTask,
+  };
+}
+
 function showStatus(message, isError = false) {
   statusText.textContent = message;
   statusText.style.color = isError ? '#ba1a1a' : '#445066';
@@ -397,10 +630,15 @@ function filterLongRows(rows, dateValue) {
 
   return rows
     .filter((row) => normalizeDate(row.date) === normalizedTarget && isValidValueCell(row.date))
-    .map((row) => ({
-      task: row.task,
-      date: row.date,
-    }));
+    .map((row) => {
+      const proofread = proofreadTask(row.task);
+      return {
+        task: proofread.task,
+        originalTask: proofread.originalTask,
+        taskChanged: proofread.taskChanged,
+        date: row.date,
+      };
+    });
 }
 
 function filterWideRows(rows, dateValue, dateHeaders) {
@@ -414,10 +652,15 @@ function filterWideRows(rows, dateValue, dateHeaders) {
 
   const filtered = rows
     .filter((row) => isValidValueCell(row.dateValues[selectedHeader]))
-    .map((row) => ({
-      task: row.task,
-      date: row.dateValues[selectedHeader],
-    }));
+    .map((row) => {
+      const proofread = proofreadTask(row.task);
+      return {
+        task: proofread.task,
+        originalTask: proofread.originalTask,
+        taskChanged: proofread.taskChanged,
+        date: row.dateValues[selectedHeader],
+      };
+    });
 
   return { filtered, selectedHeader };
 }
@@ -562,6 +805,20 @@ function buildWorkbookFromSheets(sheets) {
       font: { bold: true },
       alignment: { horizontal: 'center' },
     };
+    exportRows.forEach((row, index) => {
+      if (!row.taskChanged) return;
+
+      const cellAddress = XLSX.utils.encode_cell({ r: index + 4, c: 0 });
+      worksheet[cellAddress] = worksheet[cellAddress] || { t: 's', v: row.task || '' };
+      worksheet[cellAddress].s = {
+        fill: {
+          patternType: 'solid',
+          fgColor: { rgb: 'FFFF00' },
+          bgColor: { rgb: 'FFFF00' },
+        },
+        font: { color: { rgb: '000000' } },
+      };
+    });
     worksheet['!sheetViews'] = [{ RTL: true }];
     worksheet['!cols'] = [{ wch: 60 }, { wch: 20 }];
     XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
@@ -731,7 +988,12 @@ cleanButton.addEventListener('click', async () => {
     updateTableHeader(firstHeader);
     renderTable(filteredRows);
 
-    showStatus(`تم تنظيف البيانات بنجاح من ${files.length} ملف${files.length === 1 ? '' : 'ات'}.`);
+    const correctedTasksCount = filteredRows.filter((row) => row.taskChanged).length;
+    const proofreadingMessage = correctedTasksCount
+      ? ` وتم تدقيق ${correctedTasksCount} مهمة وتلوينها بالأصفر عند التصدير.`
+      : ' ولم يتم العثور على مهام تحتاج تعديلاً.';
+
+    showStatus(`تم تنظيف البيانات بنجاح من ${files.length} ملف${files.length === 1 ? '' : 'ات'}.${proofreadingMessage}`);
     downloadButton.disabled = false;
   } catch (error) {
     console.error(error);
