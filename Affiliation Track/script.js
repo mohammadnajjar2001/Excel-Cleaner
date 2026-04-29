@@ -638,6 +638,8 @@ cleanButton.addEventListener('click', async () => {
   if (filterType === 'week2') selectedDate = "2";
   if (filterType === 'week3') selectedDate = "3";
   if (filterType === 'week4') selectedDate = "4";
+  if (filterType === 'all') selectedDate = "44";
+
 
   if (!files.length) {
     showStatus('الرجاء اختيار ملف Excel على الأقل.', true);

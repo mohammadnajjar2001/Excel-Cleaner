@@ -136,6 +136,20 @@ function normalizeDate(value) {
   return `${year}-${month}-${day}`;
 }
 
+function getMonthNumber(value) {
+  const text = normalizeText(value)
+    .replace(/[٠-٩]/g, (digit) => '٠١٢٣٤٥٦٧٨٩'.indexOf(digit))
+    .replace(/[۰-۹]/g, (digit) => '۰۱۲۳۴۵۶۷۸۹'.indexOf(digit))
+    .replace(/[اأإآ]ل/g, 'ال');
+
+  if (text === '44') return '4';
+  if (!text.includes('شهر') && !text.includes('month')) return null;
+  if (text.includes('الرابع') || text.includes('fourth') || text.includes('four')) return '4';
+  if (/(^|[^\d])4([^\d]|$)/.test(text)) return '4';
+
+  return null;
+}
+
 function isDateLike(value) {
   return Boolean(parseExcelDate(value));
 }
@@ -160,7 +174,7 @@ function getWeekNumber(value) {
     .replace(/[اأإآ]ل/g, 'ال')
     .replace(/first|one|الاول|الأول/g, '1')
     .replace(/second|two|الثاني/g, '2')
-    .replace(/third|three|الثالث/g, '04/27/2026')
+    .replace(/third|three|الثالث/g, '3')
     .replace(/fourth|four|الرابع/g, '4');
 
   if (/^\d{1,4}[\/\-]\d{1,2}[\/\-]\d{1,4}$/.test(text)) {
@@ -188,6 +202,10 @@ function periodHeaderMatchesFilter(header, filter) {
     return normalizeDate(header.label) === normalizedTarget || normalizeDate(header.key) === normalizedTarget;
   }
 
+  if (filter.type === 'month') {
+    return getMonthNumber(header.label) === filter.key || getMonthNumber(header.key) === filter.key;
+  }
+
   return header.key === filter.key;
 }
 
@@ -196,6 +214,10 @@ function periodValueMatchesFilter(value, filter) {
     const normalizedTarget = normalizeDate(filter.key);
     if (!normalizedTarget) return false;
     return normalizeDate(value) === normalizedTarget;
+  }
+
+  if (filter.type === 'month') {
+    return getMonthNumber(value) === filter.key;
   }
 
   return getComparableValue(value) === filter.key;
@@ -208,6 +230,10 @@ function isPeriodHeader(value) {
 function isMatchingHeaderForFilter(value, filterType) {
   if (filterType === 'date') {
     return isDateLike(value);
+  }
+
+  if (filterType === 'month') {
+    return getMonthNumber(value) === '4';
   }
 
   if (filterType === 'week') {
@@ -274,7 +300,7 @@ function findPeriodHeaderRow(rows, taskColIndex, filterType = 'all') {
       if (isMatchingHeaderForFilter(row[colIndex], filterType)) periodCount += 1;
     }
 
-    if (periodCount >= 2) return rowIndex;
+    if (periodCount >= (filterType === 'month' ? 1 : 2)) return rowIndex;
   }
 
   return null;
@@ -376,6 +402,10 @@ function getSelectedFilter() {
     return { type: 'all', key: 'all', label: 'كل البيانات', header: 'القيمة' };
   }
 
+  if (filterType === '44') {
+    return { type: 'month', key: '4', label: 'الشهر الرابع كامل', header: 'الشهر الرابع كامل' };
+  }
+
   const week = filterType.replace('week', '');
   return { type: 'week', key: week, label: `الأسبوع ${week}`, header: `الأسبوع ${week}` };
 }
@@ -402,6 +432,29 @@ function filterPreparedRows(prepared, filter) {
         });
       });
       return { rows: allRows, header: 'القيمة' };
+    }
+
+    if (filter.type === 'month') {
+      const monthHeaders = prepared.periodHeaders.filter((header) => periodHeaderMatchesFilter(header, filter));
+      const monthRows = [];
+
+      prepared.rows.forEach((row) => {
+        monthHeaders.forEach((header) => {
+          const value = row.values[header.key];
+          if (isValidValueCell(value)) {
+            const proofread = proofreadTask(row.task);
+            monthRows.push({
+              task: proofread.task,
+              originalTask: proofread.originalTask,
+              taskChanged: proofread.taskChanged,
+              value,
+              period: header.label,
+            });
+          }
+        });
+      });
+
+      return { rows: monthRows, header: filter.header };
     }
 
     const selectedHeader = prepared.periodHeaders.find((header) => periodHeaderMatchesFilter(header, filter));

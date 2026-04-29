@@ -63,7 +63,19 @@ function normalizeDigitsAndPercent(value) {
   return String(value ?? "")
     .replace(/[٠-٩]/g, (digit) => arabicDigits.indexOf(digit))
     .replace(/[۰-۹]/g, (digit) => persianDigits.indexOf(digit))
-    .replace(/[٪﹪％]/g, "%");
+    .replace(/[٪﹪％]/g, "%")
+    .replace(/[٫٬،]/g, (char) => (char === "٫" ? "." : ","));
+}
+
+function normalizeOcrNumberText(value) {
+  return normalizeDigitsAndPercent(value)
+    .replace(/[OoQ]/g, "0")
+    .replace(/[Il|]/g, "1")
+    .replace(/[S]/g, "5")
+    .replace(/[B]/g, "8")
+    .replace(/\s*%\s*/g, "%")
+    .replace(/%\s*([0-9])/g, "%$1")
+    .replace(/([0-9])\s+([0-9])/g, "$1$2");
 }
 
 function normalizeArabic(value) {
@@ -92,7 +104,7 @@ function tokenSet(value) {
 }
 
 function removeValuesFromText(value) {
-  return normalizeDigitsAndPercent(value)
+  return normalizeOcrNumberText(value)
     .replace(/%\s*-?\d+(?:[.,]\d+)?/g, " ")
     .replace(/-?\d+(?:[.,]\d+)?\s*%/g, " ")
     .replace(/(^|\s)-?\d+(?:[.,]\d+)?(?=\s|$)/g, " ")
@@ -123,12 +135,12 @@ function findHeaderIndex(headers, kind) {
 }
 
 function looksLikeValue(value) {
-  const text = normalizeDigitsAndPercent(value).trim();
+  const text = normalizeOcrNumberText(value).trim();
   return /^%?\s*-?\d+(?:[.,]\d+)?\s*%?$/.test(text);
 }
 
 function normalizeValue(value) {
-  const raw = normalizeDigitsAndPercent(value).trim();
+  const raw = normalizeOcrNumberText(value).trim();
   if (!raw) return "";
   const hasPercent = raw.includes("%");
   const number = Number(raw.replace(/[^\d.,-]/g, "").replace(",", "."));
@@ -140,7 +152,7 @@ function normalizeValue(value) {
 function valueExistsInText(value, text) {
   const normalized = normalizeValue(value);
   if (!normalized) return true;
-  const normalizedText = normalizeDigitsAndPercent(text).replace(/,/g, ".");
+  const normalizedText = normalizeOcrNumberText(text).replace(/,/g, ".");
   const numberText = normalized.replace("%", "");
   const escapedNumber = numberText.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const patterns = normalized.includes("%")
@@ -319,12 +331,30 @@ function sheetToDisplayRows(sheet) {
     for (let colIndex = range.s.c; colIndex <= range.e.c; colIndex += 1) {
       const address = XLSX.utils.encode_cell({ r: rowIndex, c: colIndex });
       const cell = sheet[address];
-      row.push(cell ? String(cell.w ?? cell.v ?? "").trim() : "");
+      row.push(cell ? getDisplayCellValue(cell) : "");
     }
     rows.push(row);
   }
 
   return rows;
+}
+
+function getDisplayCellValue(cell) {
+  if (!cell) return "";
+  if (cell.w !== undefined && cell.w !== null && String(cell.w).trim() !== "") {
+    return String(cell.w).trim();
+  }
+
+  const format = String(cell.z || "");
+  if (typeof cell.v === "number" && format.includes("%")) {
+    const percent = cell.v * 100;
+    const compact = Number.isInteger(percent)
+      ? String(percent)
+      : String(Number(percent.toFixed(6))).replace(/0+$/, "").replace(/\.$/, "");
+    return `${compact}%`;
+  }
+
+  return String(cell.v ?? "").trim();
 }
 
 function columnStats(rows, colIndex, startRow) {
