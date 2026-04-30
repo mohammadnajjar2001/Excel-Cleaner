@@ -167,11 +167,17 @@ function normalizeText(value) {
 }
 
 function getWeekNumber(value) {
-  const text = normalizeText(value)
+  const normalizedValue = normalizeText(value)
     .replace(/[٠-٩]/g, (digit) => '٠١٢٣٤٥٦٧٨٩'.indexOf(digit))
     .replace(/[۰-۹]/g, (digit) => '۰۱۲۳۴۵۶۷۸۹'.indexOf(digit))
     .replace(/[／⁄]/g, '/')
-    .replace(/[اأإآ]ل/g, 'ال')
+    .replace(/[اأإآ]ل/g, 'ال');
+
+  if (normalizedValue === '44' || normalizedValue.includes('شهر') || normalizedValue.includes('month')) {
+    return null;
+  }
+
+  const text = normalizedValue
     .replace(/first|one|الاول|الأول/g, '1')
     .replace(/second|two|الثاني/g, '2')
     .replace(/third|three|الثالث/g, '3')
