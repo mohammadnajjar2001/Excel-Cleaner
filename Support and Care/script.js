@@ -777,7 +777,7 @@ downloadButton.addEventListener('click', () => {
     return;
   }
 
-  const baseName = selectedFile.name.replace(/\.(xlsx|xls)$/i, '') || 'الدعم-الأسبوعي';
+  const baseName = selectedFile.name.replace(/\.(xlsx|xls)$/i, '') || 'الدعم-والرعاية';
   const safeLabel = outputLabel.replace(/[^\w\u0600-\u06FF-]+/g, '-');
   XLSX.writeFile(outputWorkbook, `${baseName}-${safeLabel}.xlsx`);
 });

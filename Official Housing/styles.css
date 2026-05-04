@@ -1,60 +1,59 @@
 body {
-  font-family: 'Cairo', sans-serif;
   margin: 0;
   background: linear-gradient(135deg, #eef2f7, #f8fafc);
   color: #2c3e50;
+  font-family: 'Cairo', sans-serif;
 }
 
-/* الشريط العلوي */
 .topbar {
+  padding: 18px 25px;
   background: #1f2a37;
   color: white;
-  padding: 18px 25px;
-  font-size: 20px;
   text-align: center;
 }
 
-/* الحاوية */
+.topbar p {
+  margin: 5px 0 0;
+  color: #d1d5db;
+}
+
 .wrapper {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  gap: 25px;
   padding: 40px 20px;
 }
 
-/* اللوحة */
 .panel {
-  background: white;
   width: 100%;
-  max-width: 550px;
-  padding: 35px;
-  border-radius: 14px;
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 30px;
   border: 1px solid #e5e7eb;
+  border-radius: 14px;
   background: #ffffffcc;
   backdrop-filter: blur(6px);
 }
 
-/* عنوان */
 .panel h2 {
   margin-bottom: 10px;
   font-weight: 700;
 }
 
-/* وصف */
 .panel p {
+  margin-bottom: 20px;
   color: #6b7280;
-  margin-bottom: 25px;
 }
 
-/* زر اختيار الملف */
 .file-label {
   display: block;
-  background: #f1f5f9;
-  border: 2px dashed #94a3b8;
-  padding: 15px;
-  text-align: center;
-  border-radius: 10px;
-  cursor: pointer;
   margin-bottom: 15px;
+  padding: 15px;
+  border: 2px dashed #94a3b8;
+  border-radius: 10px;
+  background: #f1f5f9;
+  cursor: pointer;
+  text-align: center;
   transition: 0.2s;
 }
 
@@ -64,6 +63,38 @@ body {
 
 input[type="file"] {
   display: none;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 15px;
+}
+
+.field span,
+.selected-file-title {
+  color: #2c3e50;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+input[type="date"],
+select {
+  padding: 12px 14px;
+  border: 1px solid #d0d7de;
+  border-radius: 10px;
+  background: white;
+  color: #333;
+  font-size: 14px;
+  outline: none;
+  transition: 0.2s;
+}
+
+input:focus,
+select:focus {
+  border-color: #4a90e2;
+  box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.15);
 }
 
 .selected-file {
@@ -76,9 +107,6 @@ input[type="file"] {
 
 .selected-file-title {
   margin-bottom: 10px;
-  font-size: 14px;
-  font-weight: 700;
-  color: #2c3e50;
 }
 
 .empty-file {
@@ -108,56 +136,86 @@ input[type="file"] {
 
 .remove-file-btn {
   flex: 0 0 auto;
+  padding: 6px 12px;
   border: none;
   border-radius: 6px;
-  padding: 6px 12px;
   background: #fee2e2;
   color: #991b1b;
+  cursor: pointer;
   font-size: 13px;
   font-weight: 700;
-  cursor: pointer;
 }
 
 .remove-file-btn:hover {
   background: #fecaca;
 }
 
-/* زر المعالجة */
-.process-btn {
+.process-btn,
+.secondary-btn {
   width: 100%;
+  margin-top: 10px;
   padding: 14px;
   border: none;
-  background: #2563eb;
-  color: white;
-  font-size: 16px;
   border-radius: 8px;
   cursor: pointer;
-  transition: 0.2s;
+  font-size: 16px;
+}
+
+.process-btn {
+  background: #2563eb;
+  color: white;
 }
 
 .process-btn:hover {
   background: #1d4ed8;
 }
 
-/* الحالة */
+.secondary-btn {
+  background: #f1f5ff;
+  color: #1e3a8a;
+}
+
+.secondary-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
 .status-box {
   margin-top: 18px;
-  font-size: 15px;
   padding: 10px;
-  background: #f8fafc;
-  border-radius: 6px;
   border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background: #f8fafc;
+  font-size: 15px;
   text-align: center;
 }
 
-/* التجاوب */
+.table-wrapper {
+  overflow-x: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  padding: 14px 16px;
+  border-bottom: 1px solid #e2e8f0;
+  vertical-align: top;
+}
+
+th {
+  background: #f1f5f9;
+  font-weight: 700;
+}
+
 @media (max-width: 600px) {
   .panel {
-    padding: 25px;
-  }
-
-  .topbar {
-    font-size: 18px;
+    padding: 22px;
   }
 
   .file-item {

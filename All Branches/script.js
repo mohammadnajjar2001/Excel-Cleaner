@@ -24,7 +24,6 @@ const allowedSheetNames = [
   'البيانات',
   'المدنيين',
   'التخطيط',
-  'الدعم',
   'الأفراد',
   'المالية',
   'التوظيف',
@@ -47,12 +46,29 @@ const sheetNameAliases = [
   { sheet: 'التخطيط', aliases: ['التخطيط'] },
   { sheet: 'التنمية', aliases: ['التنمية', 'التنميه'] },
   { sheet: 'البيانات', aliases: ['البيانات'] },
-  { sheet: 'الدعم', aliases: ['الدعم'] },
   { sheet: 'المالية', aliases: ['المالية', 'الماليه', 'المالي'] },
   { sheet: 'الخدمات', aliases: ['الخدمات', 'خدمات'] },
   { sheet: 'الديوان', aliases: ['الديوان'] },
   { sheet: 'المركبات', aliases: ['المركبات'] },
 ];
+
+const branchSheetTitles = {
+  المتابعة: 'فرع المتابعة والتقييم',
+  'شؤون الضباط': 'فرع شؤون الضباط',
+  'صف الضباط': 'فرع صف الضباط',
+  التنمية: 'فرع التنمية والتطوير',
+  البيانات: 'فرع البيانات',
+  المدنيين: 'فرع شؤون العاملين المدنيين والمتعاقدين',
+  التخطيط: 'فرع التخطيط والإحصاء',
+  الأفراد: 'فرع الأفراد',
+  المالية: 'الفرع المالي',
+  التوظيف: 'قسم التوظيف المركزي',
+  المعلوماتية: 'قسم المعلوماتية',
+  الخدمات: 'مكتب الخدمات اللوجستية',
+  الديوان: 'قسم الديوان المركزي',
+  المركبات: 'قسم المركبات',
+  'القوى البشرية': 'قسم القوى البشرية',
+};
 
 const taskProofreadingRules = [
   { pattern: /احالة مزكرات/g, replacement: 'إحالة مذكرات' },
@@ -783,6 +799,43 @@ function makeUniqueSheetName(workbook, baseName) {
   return sheetName;
 }
 
+function getBranchSheetTitle(sheetName) {
+  return branchSheetTitles[sheetName] || sheetName || 'فرع';
+}
+
+function createCellStyle({ fillColor, fontColor = '000000', bold = false, fontSize = 14, horizontal = 'center' } = {}) {
+  const style = {
+    font: {
+      name: 'Arial',
+      bold,
+      sz: fontSize,
+      color: { rgb: fontColor },
+    },
+    alignment: {
+      horizontal,
+      vertical: 'center',
+      wrapText: true,
+      readingOrder: 2,
+    },
+    border: {
+      top: { style: 'thin', color: { rgb: '000000' } },
+      bottom: { style: 'thin', color: { rgb: '000000' } },
+      left: { style: 'thin', color: { rgb: '000000' } },
+      right: { style: 'thin', color: { rgb: '000000' } },
+    },
+  };
+
+  if (fillColor) {
+    style.fill = {
+      patternType: 'solid',
+      fgColor: { rgb: fillColor },
+      bgColor: { rgb: fillColor },
+    };
+  }
+
+  return style;
+}
+
 function buildWorkbookFromSheets(sheets) {
   const workbook = XLSX.utils.book_new();
 
@@ -793,34 +846,39 @@ function buildWorkbookFromSheets(sheets) {
     const exportRows = addNumericPercentSeparatorRows(sortedRows);
 
     const sheetData = [
-      ['مهام ال card', ''],
-      ['', ''],
-      ['', ''],
-      sheet.headers,
-      ...exportRows.map((row) => [row.task || '', String(row.date || '')])
+      [getBranchSheetTitle(sheet.name), ''],
+      ['المهمة', 'العدد/النسبة'],
+      ...exportRows.map((row) => [row.task || '', String(row.date || '')]),
     ];
     const worksheet = XLSX.utils.aoa_to_sheet(sheetData);
-    worksheet['A1'].s = {
-      fill: { fgColor: { rgb: 'D9EAD3' } },
-      font: { bold: true },
-      alignment: { horizontal: 'center' },
-    };
-    exportRows.forEach((row, index) => {
-      if (!row.taskChanged) return;
 
-      const cellAddress = XLSX.utils.encode_cell({ r: index + 4, c: 0 });
-      worksheet[cellAddress] = worksheet[cellAddress] || { t: 's', v: row.task || '' };
-      worksheet[cellAddress].s = {
-        fill: {
-          patternType: 'solid',
-          fgColor: { rgb: 'FFFF00' },
-          bgColor: { rgb: 'FFFF00' },
-        },
-        font: { color: { rgb: '000000' } },
-      };
+    const titleStyle = createCellStyle({ fillColor: '9A9558', bold: true, fontSize: 16 });
+    const headerStyle = createCellStyle({ fillColor: '00B050', bold: true, fontSize: 14 });
+    const taskStyle = createCellStyle({ fontSize: 14 });
+    const valueStyle = createCellStyle({ fontSize: 14 });
+    const changedTaskStyle = createCellStyle({ fillColor: 'FFFF00', fontSize: 14 });
+
+    worksheet['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 1 } }];
+    worksheet['A1'].s = titleStyle;
+    worksheet['B1'] = worksheet['B1'] || { t: 's', v: '' };
+    worksheet['B1'].s = titleStyle;
+    worksheet['A2'].s = headerStyle;
+    worksheet['B2'].s = headerStyle;
+
+    exportRows.forEach((row, index) => {
+      const rowIndex = index + 2;
+      const taskCellAddress = XLSX.utils.encode_cell({ r: rowIndex, c: 0 });
+      const valueCellAddress = XLSX.utils.encode_cell({ r: rowIndex, c: 1 });
+
+      worksheet[taskCellAddress] = worksheet[taskCellAddress] || { t: 's', v: row.task || '' };
+      worksheet[valueCellAddress] = worksheet[valueCellAddress] || { t: 's', v: String(row.date || '') };
+      worksheet[taskCellAddress].s = row.taskChanged ? changedTaskStyle : taskStyle;
+      worksheet[valueCellAddress].s = valueStyle;
     });
+
     worksheet['!sheetViews'] = [{ RTL: true }];
-    worksheet['!cols'] = [{ wch: 60 }, { wch: 20 }];
+    worksheet['!cols'] = [{ wch: 72 }, { wch: 18 }];
+    worksheet['!rows'] = [{ hpt: 42 }, { hpt: 30 }, ...exportRows.map(() => ({ hpt: 27 }))];
     XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
   });
 
@@ -860,14 +918,15 @@ function addNumericPercentSeparatorRows(rows) {
   const output = [];
 
   rows.forEach((row, index) => {
-    if (index > 0) {
-      const previousType = getValueCategory(rows[index - 1].date).type;
-      const currentType = getValueCategory(row.date).type;
+    //يتم التفعيل عند الضرورة فقططططط
+    // if (index > 0) {
+    //   const previousType = getValueCategory(rows[index - 1].date).type;
+    //   const currentType = getValueCategory(row.date).type;
 
-      if (previousType === 1 && currentType === 2) {
-        output.push({ task: '', date: '' }, { task: '', date: '' });
-      }
-    }
+    //   if (previousType === 1 && currentType === 2) {
+    //     output.push({ task: '', date: '' }, { task: '', date: '' });
+    //   }
+    // }
 
     output.push(row);
   });
@@ -953,7 +1012,7 @@ cleanButton.addEventListener('click', async () => {
   if (filterType === 'week2') selectedDate = "2";
   if (filterType === 'week3') selectedDate = "3";
   if (filterType === 'week4') selectedDate = "4";
-  if (filterType === 'all') selectedDate = "44";
+  if (filterType === 'all') selectedDate = "55";
 
   if (!files.length) {
     showStatus('الرجاء اختيار ملف Excel على الأقل.', true);
