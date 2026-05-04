@@ -719,6 +719,28 @@ function buildWorkbook(sheets, filter) {
   return workbook;
 }
 
+function getUnifiedPrintSections() {
+  const rows = processedSheets
+    .filter((sheet) => isHousingBranchSheet(sheet.name))
+    .flatMap((sheet) => sheet.rows);
+  const exportRows = addNumericPercentSeparatorRows(sortRowsDescending([...rows]));
+
+  if (!exportRows.length) {
+    return [];
+  }
+
+  return [{
+    title: 'فرع السكن الوظيفي',
+    rows: exportRows.map((row) => ({
+      task: row.task || '',
+      value: String(row.value ?? ''),
+      taskChanged: Boolean(row.taskChanged),
+    })),
+  }];
+}
+
+window.getUnifiedPrintSections = getUnifiedPrintSections;
+
 function renderPreview(sheets, header) {
   resultTableBody.innerHTML = '';
   valueHeader.textContent = header || 'القيمة';

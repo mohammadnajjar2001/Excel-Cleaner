@@ -887,6 +887,24 @@ function buildWorkbookFromSheets(sheets) {
   return workbook;
 }
 
+function getUnifiedPrintSections() {
+  return mergeSheetsByName(workbookSheets)
+    .map((sheet) => {
+      const rows = addNumericPercentSeparatorRows(sortRowsDescending([...sheet.rows]));
+      return {
+        title: getBranchSheetTitle(sheet.name),
+        rows: rows.map((row) => ({
+          task: row.task || '',
+          value: String(row.date || ''),
+          taskChanged: Boolean(row.taskChanged),
+        })),
+      };
+    })
+    .filter((section) => section.rows.length > 0);
+}
+
+window.getUnifiedPrintSections = getUnifiedPrintSections;
+
 function getValueCategory(value) {
   if (value === null || value === undefined) {
     return { type: 3, value: 0 };

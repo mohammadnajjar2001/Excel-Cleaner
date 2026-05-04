@@ -555,6 +555,25 @@ function buildWorkbookFromSheets(sheets) {
   return workbook;
 }
 
+function getUnifiedPrintSections() {
+  const rows = addNumericPercentSeparatorRows(sortRowsDescending(workbookSheets.flatMap((sheet) => sheet.rows)));
+
+  if (!rows.length) {
+    return [];
+  }
+
+  return [{
+    title: 'فرع الانتساب والتوظيف',
+    rows: rows.map((row) => ({
+      task: row.task || '',
+      value: String(row.date || ''),
+      taskChanged: Boolean(row.taskChanged),
+    })),
+  }];
+}
+
+window.getUnifiedPrintSections = getUnifiedPrintSections;
+
 function processFile(file, selectedDate) {
   return parseWorkbook(file).then((workbookRows) => {
     const prepared = prepareRows(workbookRows);

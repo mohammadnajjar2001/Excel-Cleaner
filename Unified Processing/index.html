@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>المعالجة الموحدة</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <h1>المعالجة الموحدة</h1>
+      <p>تشغيل أدوات الفروع والسكن والدعم من صفحة واحدة</p>
+    </div>
+    <a class="home-link" href="../index.html">الرئيسية</a>
+  </header>
+
+  <main class="workspace">
+    <section class="controls">
+      <label>
+        <span>التاريخ الموحد</span>
+        <input id="sharedDate" type="date" />
+      </label>
+
+      <label>
+        <span>تاريخ الانتساب</span>
+        <input id="affiliationDate" type="date" />
+      </label>
+
+      <button id="runAllButton" type="button">تنزيل الملفات كلها</button>
+      <div id="status" class="status">اختر الملفات داخل كل أداة، ثم اضغط زر التنزيل الموحد.</div>
+    </section>
+
+    <section class="tools-grid" aria-label="الأدوات الأربعة">
+      <article class="tool-panel">
+        <h2>فرع الانتساب والتوظيف</h2>
+        <iframe id="affiliationFrame" src="../Affiliation Track/index.html" title="فرع الانتساب والتوظيف"></iframe>
+      </article>
+
+      <article class="tool-panel">
+        <h2>جميع الفروع</h2>
+        <iframe id="allBranchesFrame" src="../All Branches/index.html" title="جميع الفروع"></iframe>
+      </article>
+
+      <article class="tool-panel">
+        <h2>السكن الوظيفي</h2>
+        <iframe id="housingFrame" src="../Official Housing/index.html" title="السكن الوظيفي"></iframe>
+      </article>
+
+      <article class="tool-panel">
+        <h2>الدعم والرعاية</h2>
+        <iframe id="supportFrame" src="../Support and Care/index.html" title="الدعم والرعاية"></iframe>
+      </article>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
