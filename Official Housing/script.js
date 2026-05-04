@@ -567,14 +567,15 @@ function addNumericPercentSeparatorRows(rows) {
   const output = [];
 
   rows.forEach((row, index) => {
-    if (index > 0) {
-      const previousType = getValueCategory(rows[index - 1].value).type;
-      const currentType = getValueCategory(row.value).type;
+    //يتم التفعيل عند الضرورة فقطططط
+    // if (index > 0) {
+    //   const previousType = getValueCategory(rows[index - 1].value).type;
+    //   const currentType = getValueCategory(row.value).type;
 
-      if (previousType === 1 && currentType === 2) {
-        output.push({ task: '', period: '', value: '' }, { task: '', period: '', value: '' });
-      }
-    }
+    //   if (previousType === 1 && currentType === 2) {
+    //     output.push({ task: '', period: '', value: '' }, { task: '', period: '', value: '' });
+    //   }
+    // }
 
     output.push(row);
   });
@@ -600,6 +601,14 @@ function isHousingBranchSheet(sheetName) {
   return normalizeArabicSheetName(sheetName).includes(normalizeArabicSheetName('فرع السكن'));
 }
 
+function getHousingSheetTitle(sheetName) {
+  if (isHousingBranchSheet(sheetName)) {
+    return 'فرع السكن الوظيفي';
+  }
+
+  return `السكن الوظيفي - مركز ${String(sheetName || '').trim() || 'السكن'}`;
+}
+
 function getSafeSheetName(name, usedNames) {
   const cleaned = String(name || 'Sheet')
     .replace(/[:\\/?*\[\]]/g, '')
@@ -619,6 +628,39 @@ function getSafeSheetName(name, usedNames) {
   return sheetName;
 }
 
+function createCellStyle({ fillColor, fontColor = '000000', bold = false, fontSize = 14, horizontal = 'center' } = {}) {
+  const style = {
+    font: {
+      name: 'Arial',
+      bold,
+      sz: fontSize,
+      color: { rgb: fontColor },
+    },
+    alignment: {
+      horizontal,
+      vertical: 'center',
+      wrapText: true,
+      readingOrder: 2,
+    },
+    border: {
+      top: { style: 'thin', color: { rgb: '000000' } },
+      bottom: { style: 'thin', color: { rgb: '000000' } },
+      left: { style: 'thin', color: { rgb: '000000' } },
+      right: { style: 'thin', color: { rgb: '000000' } },
+    },
+  };
+
+  if (fillColor) {
+    style.fill = {
+      patternType: 'solid',
+      fgColor: { rgb: fillColor },
+      bgColor: { rgb: fillColor },
+    };
+  }
+
+  return style;
+}
+
 function buildWorkbook(sheets, filter) {
   const workbook = XLSX.utils.book_new();
   const usedNames = new Set();
@@ -626,17 +668,10 @@ function buildWorkbook(sheets, filter) {
   sheets.forEach((sheet) => {
     const sortedRows = sortRowsDescending([...sheet.rows]);
     const exportRows = addNumericPercentSeparatorRows(sortedRows);
-    const headerRow = filter.type === 'all' ? ['المهمة', 'الفترة', sheet.header] : ['المهمة', sheet.header];
+    const headerRow = filter.type === 'all' ? ['المهمة', 'الفترة', 'العدد/النسبة'] : ['المهمة', 'العدد/النسبة'];
     const rowWidth = headerRow.length;
-    const cardRows = isHousingBranchSheet(sheet.name)
-      ? [
-          ['مهام ال card', ...Array(rowWidth - 1).fill('')],
-          Array(rowWidth).fill(''),
-          Array(rowWidth).fill(''),
-        ]
-      : [];
     const sheetData = [
-      ...cardRows,
+      [getHousingSheetTitle(sheet.name), ...Array(rowWidth - 1).fill('')],
       headerRow,
       ...exportRows.map((row) => (
         filter.type === 'all'
@@ -645,31 +680,36 @@ function buildWorkbook(sheets, filter) {
       )),
     ];
     const worksheet = XLSX.utils.aoa_to_sheet(sheetData);
-    if (cardRows.length && worksheet['A1']) {
-      worksheet['A1'].s = {
-        fill: { fgColor: { rgb: 'D9EAD3' } },
-        font: { bold: true },
-        alignment: { horizontal: 'center' },
-      };
-    }
-    exportRows.forEach((row, index) => {
-      if (!row.taskChanged) return;
 
-      const cellAddress = XLSX.utils.encode_cell({ r: cardRows.length + 1 + index, c: 0 });
-      worksheet[cellAddress] = worksheet[cellAddress] || { t: 's', v: row.task || '' };
-      worksheet[cellAddress].s = {
-        fill: {
-          patternType: 'solid',
-          fgColor: { rgb: 'FFFF00' },
-          bgColor: { rgb: 'FFFF00' },
-        },
-        font: { color: { rgb: '000000' } },
-      };
+    const titleStyle = createCellStyle({ fillColor: '9A9558', bold: true, fontSize: 16 });
+    const headerStyle = createCellStyle({ fillColor: '00B050', bold: true, fontSize: 14 });
+    const valueStyle = createCellStyle({ fontSize: 14 });
+    const changedTaskStyle = createCellStyle({ fillColor: 'FFFF00', fontSize: 14 });
+
+    worksheet['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: rowWidth - 1 } }];
+    for (let colIndex = 0; colIndex < rowWidth; colIndex += 1) {
+      const titleCellAddress = XLSX.utils.encode_cell({ r: 0, c: colIndex });
+      const headerCellAddress = XLSX.utils.encode_cell({ r: 1, c: colIndex });
+      worksheet[titleCellAddress] = worksheet[titleCellAddress] || { t: 's', v: '' };
+      worksheet[titleCellAddress].s = titleStyle;
+      worksheet[headerCellAddress].s = headerStyle;
+    }
+
+    exportRows.forEach((row, index) => {
+      const rowIndex = index + 2;
+
+      for (let colIndex = 0; colIndex < rowWidth; colIndex += 1) {
+        const cellAddress = XLSX.utils.encode_cell({ r: rowIndex, c: colIndex });
+        worksheet[cellAddress] = worksheet[cellAddress] || { t: 's', v: '' };
+        worksheet[cellAddress].s = colIndex === 0 && row.taskChanged ? changedTaskStyle : valueStyle;
+      }
     });
+
     worksheet['!sheetViews'] = [{ RTL: true }];
     worksheet['!cols'] = filter.type === 'all'
-      ? [{ wch: 55 }, { wch: 18 }, { wch: 18 }]
-      : [{ wch: 55 }, { wch: 18 }];
+      ? [{ wch: 62 }, { wch: 18 }, { wch: 18 }]
+      : [{ wch: 72 }, { wch: 18 }];
+    worksheet['!rows'] = [{ hpt: 42 }, { hpt: 30 }, ...exportRows.map(() => ({ hpt: 27 }))];
 
     XLSX.utils.book_append_sheet(workbook, worksheet, getSafeSheetName(sheet.name, usedNames));
   });
@@ -777,9 +817,8 @@ downloadButton.addEventListener('click', () => {
     return;
   }
 
-  const baseName = selectedFile.name.replace(/\.(xlsx|xls)$/i, '') || 'السكن-الوظيفي';
-  const safeLabel = outputLabel.replace(/[^\w\u0600-\u06FF-]+/g, '-');
-  XLSX.writeFile(outputWorkbook, `${baseName}-${safeLabel}.xlsx`);
+  const selectedDateLabel = outputLabel.replace(/[\\/:*?"<>|]+/g, '-').trim() || 'بدون تاريخ';
+  XLSX.writeFile(outputWorkbook, `فرع ومراكز السكن الوظيفي (${selectedDateLabel}).xlsx`);
 });
 
 toggleDateInput();
