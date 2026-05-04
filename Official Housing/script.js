@@ -741,6 +741,24 @@ function getUnifiedPrintSections() {
 
 window.getUnifiedPrintSections = getUnifiedPrintSections;
 
+function getUnifiedHousingPrintSections() {
+  return processedSheets
+    .map((sheet) => {
+      const exportRows = addNumericPercentSeparatorRows(sortRowsDescending([...sheet.rows]));
+      return {
+        title: getHousingSheetTitle(sheet.name),
+        rows: exportRows.map((row) => ({
+          task: row.task || '',
+          value: String(row.value ?? ''),
+          taskChanged: Boolean(row.taskChanged),
+        })),
+      };
+    })
+    .filter((section) => section.rows.length > 0);
+}
+
+window.getUnifiedHousingPrintSections = getUnifiedHousingPrintSections;
+
 function renderPreview(sheets, header) {
   resultTableBody.innerHTML = '';
   valueHeader.textContent = header || 'القيمة';

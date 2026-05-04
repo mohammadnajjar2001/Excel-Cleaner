@@ -224,11 +224,17 @@ function collectPrintSections() {
   });
 }
 
-function downloadPrintWorkbook() {
-  const XLSX = getXlsxApi();
-  const sections = collectPrintSections();
+function collectFrameSections(frameId, getterName) {
+  const frameWindow = document.getElementById(frameId)?.contentWindow;
+  if (typeof frameWindow?.[getterName] !== 'function') {
+    return [];
+  }
 
-  if (!XLSX || !sections.length) {
+  return frameWindow[getterName]();
+}
+
+function appendPrintSheet(workbook, XLSX, sheetName, sections) {
+  if (!sections.length) {
     return false;
   }
 
@@ -256,7 +262,6 @@ function downloadPrintWorkbook() {
     }
   });
 
-  const workbook = XLSX.utils.book_new();
   const worksheet = XLSX.utils.aoa_to_sheet(rows);
   const titleStyle = createCellStyle(XLSX, { fillColor: '9A9558', bold: true, fontSize: 16 });
   const headerStyle = createCellStyle(XLSX, { fillColor: '00B050', bold: true, fontSize: 14 });
@@ -290,7 +295,33 @@ function downloadPrintWorkbook() {
     return { hpt: 27 };
   });
 
-  XLSX.utils.book_append_sheet(workbook, worksheet, 'للطباعة');
+  XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
+  return true;
+}
+
+function downloadPrintWorkbook() {
+  const XLSX = getXlsxApi();
+  const sections = collectPrintSections();
+
+  if (!XLSX || !sections.length) {
+    return false;
+  }
+
+  const workbook = XLSX.utils.book_new();
+  appendPrintSheet(workbook, XLSX, 'للطباعة', sections);
+  appendPrintSheet(
+    workbook,
+    XLSX,
+    'مراكز وفرع الدعم',
+    collectFrameSections('supportFrame', 'getUnifiedSupportCentersPrintSections')
+  );
+  appendPrintSheet(
+    workbook,
+    XLSX,
+    'مراكز وفرع السكن',
+    collectFrameSections('housingFrame', 'getUnifiedHousingPrintSections')
+  );
+
   workbook.Workbook = workbook.Workbook || {};
   workbook.Workbook.Views = [{ RTL: true }];
 
