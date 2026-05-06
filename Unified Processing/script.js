@@ -308,7 +308,7 @@ function downloadPrintWorkbook() {
   }
 
   const workbook = XLSX.utils.book_new();
-  appendPrintSheet(workbook, XLSX, 'للطباعة', sections);
+  appendPrintSheet(workbook, XLSX, 'الأفرع كاملة', sections);
   appendPrintSheet(
     workbook,
     XLSX,
@@ -326,7 +326,7 @@ function downloadPrintWorkbook() {
   workbook.Workbook.Views = [{ RTL: true }];
 
   const selectedDateLabel = sharedDateInput.value.replace(/[\\/:*?"<>|]+/g, '-') || 'بدون تاريخ';
-  XLSX.writeFile(workbook, `للطباعة (${selectedDateLabel}).xlsx`);
+  XLSX.writeFile(workbook, `الأفرع والمراكز كاملة (${selectedDateLabel}).xlsx`);
   return true;
 }
 
