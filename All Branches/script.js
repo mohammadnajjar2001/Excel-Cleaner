@@ -292,6 +292,12 @@ function escapeRegExp(value) {
   return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
+function replaceExactProofreadingMatch(value, source, replacement) {
+  const wordChar = 'A-Za-z0-9\\u0600-\\u06FF\\u0750-\\u077F\\u08A0-\\u08FF\\uFB50-\\uFDFF\\uFE70-\\uFEFF';
+  const pattern = new RegExp(`(^|[^${wordChar}])(${escapeRegExp(source)})(?=$|[^${wordChar}])`, 'g');
+  return String(value).replace(pattern, (match, prefix) => `${prefix}${replacement}`);
+}
+
 function sanitizeRuleEntry(entry, fallbackId = createRuleId()) {
   const source = String(entry?.source ?? '').trim();
   const replacement = String(entry?.replacement ?? '').trim();
@@ -337,18 +343,7 @@ function loadProofreadingRules() {
 }
 
 function getActiveTaskProofreadingRules() {
-  return proofreadingRuleEntries
-    .map((entry) => {
-      try {
-        return {
-          pattern: new RegExp(escapeRegExp(entry.source), 'g'),
-          replacement: entry.replacement,
-        };
-      } catch (error) {
-        return null;
-      }
-    })
-    .filter(Boolean);
+  return proofreadingRuleEntries.filter((entry) => entry.source && entry.replacement);
 }
 
 function resetRuleForm() {
@@ -547,7 +542,7 @@ function proofreadTask(task) {
   let correctedTask = normalizeTaskSpacing(originalTask);
 
   getActiveTaskProofreadingRules().forEach((rule) => {
-    correctedTask = correctedTask.replace(rule.pattern, rule.replacement);
+    correctedTask = replaceExactProofreadingMatch(correctedTask, rule.source, rule.replacement);
   });
 
   correctedTask = normalizeTaskSpacing(correctedTask);

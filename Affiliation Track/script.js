@@ -15,6 +15,7 @@ let selectedFiles = [];
 let exportHeaders = ['Task', 'Date'];
 let originalFileName = 'All-Branches-Filtered.xlsx';
 let lastSelectedDate = '';
+const SHARED_RULES_STORAGE_KEY = 'allBranchesTaskProofreadingRules';
 
 function showStatus(message, isError = false) {
   statusText.textContent = message;
@@ -360,6 +361,32 @@ function normalizeOriginalTaskForCompare(value) {
     .trim();
 }
 
+function escapeRegExp(value) {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function getSharedProofreadingRules() {
+  try {
+    const storedRules = JSON.parse(localStorage.getItem(SHARED_RULES_STORAGE_KEY) || '[]');
+    if (!Array.isArray(storedRules)) return [];
+
+    return storedRules
+      .map((rule) => ({
+        source: String(rule?.source ?? '').trim(),
+        replacement: String(rule?.replacement ?? '').trim(),
+      }))
+      .filter((rule) => rule.source && rule.replacement);
+  } catch (error) {
+    return [];
+  }
+}
+
+function replaceExactProofreadingMatch(value, source, replacement) {
+  const wordChar = 'A-Za-z0-9\\u0600-\\u06FF\\u0750-\\u077F\\u08A0-\\u08FF\\uFB50-\\uFDFF\\uFE70-\\uFEFF';
+  const pattern = new RegExp(`(^|[^${wordChar}])(${escapeRegExp(source)})(?=$|[^${wordChar}])`, 'g');
+  return String(value).replace(pattern, (match, prefix) => `${prefix}${replacement}`);
+}
+
 function normalizeTaskSpacing(value) {
   return String(value ?? '')
     .replace(/\u0640/g, '')
@@ -375,7 +402,13 @@ function normalizeTaskSpacing(value) {
 
 function proofreadTask(task) {
   const originalTask = String(task ?? '');
-  const correctedTask = normalizeTaskSpacing(originalTask);
+  let correctedTask = normalizeTaskSpacing(originalTask);
+
+  getSharedProofreadingRules().forEach((rule) => {
+    correctedTask = replaceExactProofreadingMatch(correctedTask, rule.source, rule.replacement);
+  });
+
+  correctedTask = normalizeTaskSpacing(correctedTask);
 
   return {
     task: correctedTask,
