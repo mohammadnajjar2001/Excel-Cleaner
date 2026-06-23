@@ -64,6 +64,8 @@ body {
 /* input */
 input[type="file"],
 input[type="date"],
+input[type="text"],
+input[type="search"],
 select {
   padding: 12px 14px;
   border: 1px solid #d0d7de;
@@ -192,6 +194,141 @@ select:focus {
   text-align: center;
 }
 
+.rules-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.rules-header h2,
+.rules-header p {
+  margin-right: 0;
+  margin-left: 0;
+}
+
+.rules-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: end;
+}
+
+.rules-actions {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.rules-actions .process-btn,
+.rules-actions .secondary-btn {
+  width: auto;
+  min-width: 130px;
+  margin-top: 0;
+  white-space: nowrap;
+}
+
+.secondary-inline-btn {
+  flex: 0 0 auto;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 10px 14px;
+  background: #ffffff;
+  color: #334155;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.secondary-inline-btn:hover {
+  background: #f8fafc;
+}
+
+.rules-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.rule-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 58px;
+  padding: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.rule-text {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  color: #1f2937;
+  font-size: 14px;
+}
+
+.rule-source,
+.rule-replacement {
+  overflow: hidden;
+  max-width: 140px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rule-source {
+  color: #991b1b;
+  font-weight: 700;
+}
+
+.rule-arrow {
+  color: #64748b;
+}
+
+.rule-replacement {
+  color: #166534;
+  font-weight: 700;
+}
+
+.rule-buttons {
+  display: flex;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+
+.rule-edit-btn,
+.rule-delete-btn {
+  border: none;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.rule-edit-btn {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.rule-delete-btn {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.empty-rules {
+  grid-column: 1 / -1;
+  padding: 16px;
+  border: 1px dashed #cbd5e1;
+  border-radius: 8px;
+  color: #64748b;
+  text-align: center;
+}
+
 /* الجدول */
 .table-wrapper {
   overflow-x: auto;
@@ -219,6 +356,24 @@ th {
 @media (max-width: 600px) {
   .panel {
     padding: 22px;
+  }
+
+  .rules-header,
+  .rules-actions,
+  .rule-item {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .rules-form {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .rules-actions .process-btn,
+  .rules-actions .secondary-btn,
+  .secondary-inline-btn {
+    width: 100%;
   }
 
   .file-item {

@@ -1,0 +1,76 @@
+.rules-page {
+  background: #f3f6fb;
+}
+
+.rules-wrapper {
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+.rules-manager-panel {
+  border-radius: 10px;
+}
+
+.rules-manager-panel .rules-header {
+  padding-bottom: 18px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.rules-manager-panel .rules-form {
+  margin-top: 22px;
+  padding: 18px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.search-field {
+  margin-top: 18px;
+}
+
+.rules-list-wide {
+  grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+}
+
+.rules-list-wide .rule-item {
+  align-items: stretch;
+  min-height: 78px;
+}
+
+.rules-list-wide .rule-text {
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.rules-list-wide .rule-arrow {
+  display: none;
+}
+
+.rules-list-wide .rule-source,
+.rules-list-wide .rule-replacement {
+  max-width: none;
+  white-space: normal;
+}
+
+.rules-list-wide .rule-source::before {
+  content: "الحالية: ";
+  color: #64748b;
+  font-weight: 600;
+}
+
+.rules-list-wide .rule-replacement::before {
+  content: "التصحيح: ";
+  color: #64748b;
+  font-weight: 600;
+}
+
+.script-dependencies {
+  display: none;
+}
+
+@media (max-width: 700px) {
+  .rules-list-wide {
+    grid-template-columns: 1fr;
+  }
+}

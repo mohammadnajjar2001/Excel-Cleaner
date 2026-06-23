@@ -76,6 +76,32 @@
       color: #6b7280;
     }
 
+    .card.featured {
+      position: relative;
+      overflow: hidden;
+      border-color: #2563eb;
+      background: linear-gradient(135deg, #ffffff 0%, #eff6ff 100%);
+      text-align: right;
+    }
+
+    .card.featured::before {
+      content: "";
+      position: absolute;
+      inset-inline-start: 0;
+      top: 0;
+      width: 6px;
+      height: 100%;
+      background: #2563eb;
+    }
+
+    .card.featured .icon {
+      color: #2563eb;
+    }
+
+    .card.featured p {
+      color: #1e3a8a;
+    }
+
     footer {
       margin-top: 50px;
       text-align: center;
@@ -129,10 +155,10 @@
       <p>تصفية ملف متعدد الشيتات حسب التاريخ</p>
     </a>
 
-    <a class="card" href="Data Audit/index.html">
-      <div class="icon">✅</div>
-      <h3>مطابقة مهام الأفرع</h3>
-      <p>مطابقة ملف Excel قبل التصميم مع PDF بعد التصميم</p>
+    <a class="card featured" href="Proofreading Rules/index.html">
+      <div class="icon">✍️</div>
+      <h3>إدارة كلمات التدقيق</h3>
+      <p>عرض الكلمات الحالية وإضافة أو تعديل أو حذف قواعد التصحيح بسهولة</p>
     </a>
 
   </div>

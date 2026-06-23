@@ -6,6 +6,14 @@ const statusText = document.getElementById('status');
 const resultTableBody = document.querySelector('#resultTable tbody');
 const resultDateHeader = document.querySelector('#resultTable thead th:nth-child(2)');
 const selectedFilesContainer = document.getElementById('selectedFiles');
+const ruleSourceInput = document.getElementById('ruleSourceInput');
+const ruleReplacementInput = document.getElementById('ruleReplacementInput');
+const saveRuleButton = document.getElementById('saveRuleButton');
+const cancelRuleEditButton = document.getElementById('cancelRuleEditButton');
+const resetRulesButton = document.getElementById('resetRulesButton');
+const rulesSearchInput = document.getElementById('rulesSearchInput');
+const rulesStatus = document.getElementById('rulesStatus');
+const rulesList = document.getElementById('rulesList');
 
 let currentRows = [];
 let filteredRows = [];
@@ -15,6 +23,8 @@ let selectedFiles = [];
 let exportHeaders = ['Task', 'Date'];
 let originalFileName = 'Excel-Cleaner-Filtered.xlsx';
 let lastSelectedDate = '';
+let proofreadingRuleEntries = [];
+let editingRuleId = null;
 
 const allowedSheetNames = [
   'المتابعة',
@@ -267,6 +277,252 @@ const taskProofreadingRules = [
   { pattern: /مسوول/g, replacement: 'مسؤول' },
 ];
 
+const RULES_STORAGE_KEY = 'allBranchesTaskProofreadingRules';
+const defaultTaskProofreadingEntries = taskProofreadingRules.map((rule, index) => ({
+  id: `default-${index}`,
+  source: rule.pattern.source,
+  replacement: rule.replacement,
+}));
+
+function createRuleId() {
+  return `rule-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function escapeRegExp(value) {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function sanitizeRuleEntry(entry, fallbackId = createRuleId()) {
+  const source = String(entry?.source ?? '').trim();
+  const replacement = String(entry?.replacement ?? '').trim();
+
+  if (!source || !replacement) {
+    return null;
+  }
+
+  return {
+    id: String(entry?.id || fallbackId),
+    source,
+    replacement,
+  };
+}
+
+function saveProofreadingRules() {
+  try {
+    localStorage.setItem(RULES_STORAGE_KEY, JSON.stringify(proofreadingRuleEntries));
+  } catch (error) {
+    console.warn('Unable to save proofreading rules.', error);
+  }
+}
+
+function loadProofreadingRules() {
+  let hasStoredRules = false;
+
+  try {
+    const storedRules = JSON.parse(localStorage.getItem(RULES_STORAGE_KEY) || 'null');
+    if (Array.isArray(storedRules)) {
+      hasStoredRules = true;
+      proofreadingRuleEntries = storedRules
+        .map((entry) => sanitizeRuleEntry(entry))
+        .filter(Boolean);
+    }
+  } catch (error) {
+    proofreadingRuleEntries = [];
+  }
+
+  if (!hasStoredRules && !proofreadingRuleEntries.length) {
+    proofreadingRuleEntries = defaultTaskProofreadingEntries.map((entry) => ({ ...entry }));
+    saveProofreadingRules();
+  }
+}
+
+function getActiveTaskProofreadingRules() {
+  return proofreadingRuleEntries
+    .map((entry) => {
+      try {
+        return {
+          pattern: new RegExp(escapeRegExp(entry.source), 'g'),
+          replacement: entry.replacement,
+        };
+      } catch (error) {
+        return null;
+      }
+    })
+    .filter(Boolean);
+}
+
+function resetRuleForm() {
+  editingRuleId = null;
+  if (ruleSourceInput) ruleSourceInput.value = '';
+  if (ruleReplacementInput) ruleReplacementInput.value = '';
+  if (saveRuleButton) saveRuleButton.textContent = 'إضافة للسجل';
+  if (cancelRuleEditButton) cancelRuleEditButton.hidden = true;
+}
+
+function updateRulesStatus(visibleCount = proofreadingRuleEntries.length) {
+  if (!rulesStatus) return;
+  rulesStatus.textContent = `السجل يحتوي على ${proofreadingRuleEntries.length} قاعدة تصحيح. المعروض الآن: ${visibleCount}.`;
+}
+
+function renderProofreadingRules() {
+  if (!rulesList) return;
+
+  const query = String(rulesSearchInput?.value || '').trim().toLowerCase();
+  const visibleRules = proofreadingRuleEntries.filter((entry) => {
+    const source = entry.source.toLowerCase();
+    const replacement = entry.replacement.toLowerCase();
+    return !query || source.includes(query) || replacement.includes(query);
+  });
+
+  rulesList.innerHTML = '';
+
+  if (!visibleRules.length) {
+    rulesList.innerHTML = '<div class="empty-rules">لا توجد كلمات مطابقة للبحث الحالي.</div>';
+    updateRulesStatus(0);
+    return;
+  }
+
+  visibleRules.forEach((entry) => {
+    const item = document.createElement('div');
+    item.className = 'rule-item';
+    item.dataset.id = entry.id;
+
+    const text = document.createElement('div');
+    text.className = 'rule-text';
+
+    const source = document.createElement('span');
+    source.className = 'rule-source';
+    source.textContent = entry.source;
+
+    const arrow = document.createElement('span');
+    arrow.className = 'rule-arrow';
+    arrow.textContent = '←';
+
+    const replacement = document.createElement('span');
+    replacement.className = 'rule-replacement';
+    replacement.textContent = entry.replacement;
+
+    text.append(source, arrow, replacement);
+
+    const actions = document.createElement('div');
+    actions.className = 'rule-buttons';
+
+    const editButton = document.createElement('button');
+    editButton.type = 'button';
+    editButton.className = 'rule-edit-btn';
+    editButton.textContent = 'تعديل';
+    editButton.dataset.action = 'edit-rule';
+
+    const deleteButton = document.createElement('button');
+    deleteButton.type = 'button';
+    deleteButton.className = 'rule-delete-btn';
+    deleteButton.textContent = 'حذف';
+    deleteButton.dataset.action = 'delete-rule';
+
+    actions.append(editButton, deleteButton);
+    item.append(text, actions);
+    rulesList.appendChild(item);
+  });
+
+  updateRulesStatus(visibleRules.length);
+}
+
+function saveRuleFromForm() {
+  const source = ruleSourceInput?.value.trim() || '';
+  const replacement = ruleReplacementInput?.value.trim() || '';
+
+  if (!source || !replacement) {
+    showStatus('اكتب الكلمة الحالية والتصحيح قبل الحفظ.', true);
+    return;
+  }
+
+  const duplicate = proofreadingRuleEntries.find((entry) => entry.source === source && entry.id !== editingRuleId);
+  if (duplicate) {
+    showStatus('هذه الكلمة موجودة مسبقًا في سجل التدقيق.', true);
+    return;
+  }
+
+  if (editingRuleId) {
+    proofreadingRuleEntries = proofreadingRuleEntries.map((entry) =>
+      entry.id === editingRuleId ? { ...entry, source, replacement } : entry
+    );
+    showStatus('تم تعديل كلمة التدقيق بنجاح.');
+  } else {
+    proofreadingRuleEntries.push({ id: createRuleId(), source, replacement });
+    showStatus('تمت إضافة كلمة جديدة إلى سجل التدقيق.');
+  }
+
+  saveProofreadingRules();
+  resetRuleForm();
+  renderProofreadingRules();
+  resetProcessedResults();
+}
+
+function startRuleEdit(ruleId) {
+  const entry = proofreadingRuleEntries.find((rule) => rule.id === ruleId);
+  if (!entry) return;
+
+  editingRuleId = entry.id;
+  if (ruleSourceInput) ruleSourceInput.value = entry.source;
+  if (ruleReplacementInput) ruleReplacementInput.value = entry.replacement;
+  if (saveRuleButton) saveRuleButton.textContent = 'حفظ التعديل';
+  if (cancelRuleEditButton) cancelRuleEditButton.hidden = false;
+  ruleSourceInput?.focus();
+}
+
+function deleteRule(ruleId) {
+  const entry = proofreadingRuleEntries.find((rule) => rule.id === ruleId);
+  if (!entry) return;
+
+  const confirmed = window.confirm(`هل تريد حذف "${entry.source}" من سجل التدقيق؟`);
+  if (!confirmed) return;
+
+  proofreadingRuleEntries = proofreadingRuleEntries.filter((rule) => rule.id !== ruleId);
+  saveProofreadingRules();
+  resetRuleForm();
+  renderProofreadingRules();
+  resetProcessedResults();
+  showStatus('تم حذف الكلمة من سجل التدقيق.');
+}
+
+function resetProofreadingRulesToDefault() {
+  const confirmed = window.confirm('سيتم حذف التعديلات الحالية واستعادة الكلمات الأصلية. هل تريد المتابعة؟');
+  if (!confirmed) return;
+
+  proofreadingRuleEntries = defaultTaskProofreadingEntries.map((entry) => ({ ...entry }));
+  saveProofreadingRules();
+  resetRuleForm();
+  renderProofreadingRules();
+  resetProcessedResults();
+  showStatus('تمت استعادة سجل التدقيق الأصلي.');
+}
+
+function initializeProofreadingRulesManager() {
+  loadProofreadingRules();
+  renderProofreadingRules();
+
+  saveRuleButton?.addEventListener('click', saveRuleFromForm);
+  cancelRuleEditButton?.addEventListener('click', () => {
+    resetRuleForm();
+    showStatus('تم إلغاء تعديل كلمة التدقيق.');
+  });
+  resetRulesButton?.addEventListener('click', resetProofreadingRulesToDefault);
+  rulesSearchInput?.addEventListener('input', renderProofreadingRules);
+  rulesList?.addEventListener('click', (event) => {
+    const button = event.target.closest('button[data-action]');
+    if (!button) return;
+
+    const ruleId = button.closest('.rule-item')?.dataset.id;
+    if (!ruleId) return;
+
+    if (button.dataset.action === 'edit-rule') {
+      startRuleEdit(ruleId);
+    } else if (button.dataset.action === 'delete-rule') {
+      deleteRule(ruleId);
+    }
+  });
+}
+
 function normalizeTaskSpacing(value, removeTrailingDot = true) {
   let normalized = String(value ?? '')
     .replace(/\u0640/g, '')
@@ -290,7 +546,7 @@ function proofreadTask(task) {
   const comparableOriginalTask = normalizeTaskSpacing(originalTask, false);
   let correctedTask = normalizeTaskSpacing(originalTask);
 
-  taskProofreadingRules.forEach((rule) => {
+  getActiveTaskProofreadingRules().forEach((rule) => {
     correctedTask = correctedTask.replace(rule.pattern, rule.replacement);
   });
 
@@ -1104,6 +1360,7 @@ function toggleDateInput() {
 
 // تشغيل أول مرة عند تحميل الصفحة
 toggleDateInput();
+initializeProofreadingRulesManager();
 
 // عند تغيير الاختيار
 filterType.addEventListener('change', toggleDateInput);
