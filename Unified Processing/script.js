@@ -288,12 +288,13 @@ function appendPrintSheet(workbook, XLSX, sheetName, sections) {
   worksheet['!merges'] = merges;
   worksheet['!sheetViews'] = [{ RTL: true }];
   worksheet['!cols'] = [{ wch: 72 }, { wch: 18 }];
-  worksheet['!rows'] = rowTypes.map((type) => {
-    if (type === 'title') return { hpt: 42 };
-    if (type === 'header') return { hpt: 30 };
-    if (type === 'blank') return { hpt: 14 };
-    return { hpt: 27 };
+  const rowHeights = [];
+  rowTypes.forEach((type, index) => {
+    if (type === 'title') rowHeights[index] = { hpt: 42 };
+    if (type === 'header') rowHeights[index] = { hpt: 30 };
+    if (type === 'blank') rowHeights[index] = { hpt: 14 };
   });
+  worksheet['!rows'] = rowHeights;
 
   XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
   return true;

@@ -143,7 +143,7 @@ function getMonthNumber(value) {
     .replace(/[۰-۹]/g, (digit) => '۰۱۲۳۴۵۶۷۸۹'.indexOf(digit))
     .replace(/[اأإآ]ل/g, 'ال');
 
-  if (text === '44') return '4';
+  if (text === '66') return '66';
   if (!text.includes('شهر') && !text.includes('month')) return null;
   if (text.includes('الرابع') || text.includes('fourth') || text.includes('four')) return '4';
   if (/(^|[^\d])4([^\d]|$)/.test(text)) return '4';
@@ -174,7 +174,7 @@ function getWeekNumber(value) {
     .replace(/[／⁄]/g, '/')
     .replace(/[اأإآ]ل/g, 'ال');
 
-  if (normalizedValue === '44' || normalizedValue.includes('شهر') || normalizedValue.includes('month')) {
+  if (normalizedValue === '66' || normalizedValue.includes('شهر') || normalizedValue.includes('month')) {
     return null;
   }
 
@@ -240,7 +240,7 @@ function isMatchingHeaderForFilter(value, filterType) {
   }
 
   if (filterType === 'month') {
-    return getMonthNumber(value) === '4';
+    return getMonthNumber(value) === '66';
   }
 
   if (filterType === 'week') {
@@ -409,8 +409,8 @@ function getSelectedFilter() {
     return { type: 'all', key: 'all', label: 'كل البيانات', header: 'القيمة' };
   }
 
-  if (filterType === '44') {
-    return { type: 'month', key: '4', label: 'الشهر الرابع كامل', header: 'الشهر الرابع كامل' };
+  if (filterType === '66') {
+    return { type: 'month', key: '66', label: 'الشهر كامل', header: 'الشهر كامل' };
   }
 
   const week = filterType.replace('week', '');
@@ -742,7 +742,7 @@ function buildWorkbook(sheets, filter) {
     worksheet['!cols'] = filter.type === 'all'
       ? [{ wch: 62 }, { wch: 18 }, { wch: 18 }]
       : [{ wch: 72 }, { wch: 18 }];
-    worksheet['!rows'] = [{ hpt: 42 }, { hpt: 30 }, ...exportRows.map(() => ({ hpt: 27 }))];
+    worksheet['!rows'] = [{ hpt: 42 }, { hpt: 30 }];
 
     XLSX.utils.book_append_sheet(workbook, worksheet, getSafeSheetName(sheet.name, usedNames));
   });

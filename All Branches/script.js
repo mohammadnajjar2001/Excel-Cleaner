@@ -1129,7 +1129,7 @@ function buildWorkbookFromSheets(sheets) {
 
     worksheet['!sheetViews'] = [{ RTL: true }];
     worksheet['!cols'] = [{ wch: 72 }, { wch: 18 }];
-    worksheet['!rows'] = [{ hpt: 42 }, { hpt: 30 }, ...exportRows.map(() => ({ hpt: 27 }))];
+    worksheet['!rows'] = [{ hpt: 42 }, { hpt: 30 }];
     XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
   });
 
@@ -1281,7 +1281,7 @@ cleanButton.addEventListener('click', async () => {
   if (filterType === 'week2') selectedDate = "2";
   if (filterType === 'week3') selectedDate = "3";
   if (filterType === 'week4') selectedDate = "4";
-  if (filterType === 'all') selectedDate = "55";
+  if (filterType === 'all') selectedDate = "66";
 
   if (!files.length) {
     showStatus('الرجاء اختيار ملف Excel على الأقل.', true);
