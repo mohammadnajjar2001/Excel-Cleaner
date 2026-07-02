@@ -1128,7 +1128,7 @@ function buildWorkbookFromSheets(sheets) {
     });
 
     worksheet['!sheetViews'] = [{ RTL: true }];
-    worksheet['!cols'] = [{ wch: 72 }, { wch: 18 }];
+    worksheet['!cols'] = [{ wch: 66 }, { wch: 12 }];
     worksheet['!rows'] = [{ hpt: 42 }, { hpt: 30 }];
     XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
   });
@@ -1241,7 +1241,7 @@ function buildWorkbook(rows, sheetName) {
   const sheetData = [exportHeaders, ...rows.map((row) => [row.task || '', String(row.date || '')])];
   const worksheet = XLSX.utils.aoa_to_sheet(sheetData);
   worksheet['!sheetViews'] = [{ RTL: true }];
-  worksheet['!cols'] = [{ wch: 60 }, { wch: 20 }];
+  worksheet['!cols'] = [{ wch: 66 }, { wch: 12 }];
 
   const workbook = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(workbook, worksheet, sheetName || 'Cleaned');

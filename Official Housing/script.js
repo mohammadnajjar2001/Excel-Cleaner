@@ -740,8 +740,8 @@ function buildWorkbook(sheets, filter) {
 
     worksheet['!sheetViews'] = [{ RTL: true }];
     worksheet['!cols'] = filter.type === 'all'
-      ? [{ wch: 62 }, { wch: 18 }, { wch: 18 }]
-      : [{ wch: 72 }, { wch: 18 }];
+      ? [{ wch: 66 }, { wch: 12 }, { wch: 12 }]
+      : [{ wch: 66 }, { wch: 12 }];
     worksheet['!rows'] = [{ hpt: 42 }, { hpt: 30 }];
 
     XLSX.utils.book_append_sheet(workbook, worksheet, getSafeSheetName(sheet.name, usedNames));
